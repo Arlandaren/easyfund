@@ -1,0 +1,27 @@
+run:
+  timeout: 5m
+  skip-dirs:
+    - vendor
+    - node_modules
+
+linters:
+  enable:
+    - gofumpt
+    - revive
+    - misspell
+    - unconvert
+    - typecheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - errcheck
+    - gosec
+    - bodyclose
+    - exportloopref
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
