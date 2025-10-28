@@ -1,107 +1,41 @@
-../.idea
-**/.idea/
-backend/external/
-**/external/
-loki-data/
-**/loki-data/
-.idea
-/.idea
-minio-data/
-**/minio-data/
-
-
-**/myenv/
-**/myenv/*
-.idea
-
-.env
-# Бинарные файлы (скомпилированные исполняемые файлы)
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.out
-
-# Папка с зависимостями
-vendor/
-
-# Временные файлы Go
-*.tmp
-*.bak
-*.swp
-*~
-
-# Папки с модулями и кэшем
-/go/pkg/
-/go/bin/
-/bin/
-/pkg/
-
-# Результаты go test
-*.test
-*.prof
-*.cover
-cover.out
-
-# Логи и отладка
-*.log
-debug/
-debug.test
-
 # IDE и редакторы
-# VS Code
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# GoLand / IntelliJ
 .idea/
-*.iws
-*.iml
-*.ipr
 
-# Vim
+# Временные файлы редакторов
 *.swp
-*.swo
-
-# Emacs
 *~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list/
-tramp
-.\#*
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
+# Бинарные файлы
+*.exe
+*.out
+/bin/
+/pkg/
 
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
+# Зависимости
+vendor/
 
-# Секреты и конфиги (добавьте свои при необходимости)
+# Секреты и конфиги
 .env
 .env.local
 config.yaml
 secrets/
 
-# Дополнительно: если используете Air (hot reload)
-tmp/
-air.toml
-
-# Если используете Docker
+# Docker и Makefile
 .dockerignore
 Dockerfile*
 .docker/
-
-# Если используете Makefile
 Makefile.local
+
+# OS файлы
+.DS_Store
+Thumbs.db
+
+# Локальные данные
+loki-data/
+minio-data/
