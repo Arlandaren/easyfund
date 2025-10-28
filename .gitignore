@@ -15,7 +15,6 @@
 *.exe
 *.out
 /bin/
-/pkg/
 
 # Зависимости
 vendor/
