@@ -1,3 +1,4 @@
+// Package schema содержит определения сущностей для Ent.
 package schema
 
 import (
@@ -5,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
+// Bank представляет банк с необходимыми полями.
 type Bank struct {
 	ent.Schema
 }

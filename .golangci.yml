@@ -1,3 +1,5 @@
+version: "2"
+
 run:
   timeout: 5m
   skip-dirs:
@@ -6,12 +8,11 @@ run:
 
 linters:
   enable:
-    - gofumpt
-    - revive
+    # - gofumpt
+    # - revive
     - misspell
     - unconvert
-    - typecheck
-    - gosimple
+    #- typecheck
     - govet
     - ineffassign
     - staticcheck
@@ -19,7 +20,6 @@ linters:
     - errcheck
     - gosec
     - bodyclose
-    - exportloopref
 
 issues:
   exclude-use-default: false

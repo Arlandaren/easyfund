@@ -1,3 +1,4 @@
+// Package schema содержит определения сущностей для Ent.
 package schema
 
 import (
@@ -6,6 +7,7 @@ import (
 	"time"
 )
 
+// User представляет пользователя с необходимыми полями. 
 type User struct {
 	ent.Schema
 }
