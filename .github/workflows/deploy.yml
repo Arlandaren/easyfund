@@ -6,9 +6,9 @@ on:
       - main
 
 env:
-  DEPLOY_PATH: /home/apps/vpn
-  SERVER_DOMAIN: 64.176.46.43
-  SERVER_USER: root
+  DEPLOY_PATH: /path
+  SERVER_DOMAIN: address
+  SERVER_USER: user
 
 jobs:
   build_and_deploy:
