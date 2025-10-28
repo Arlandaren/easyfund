@@ -1,119 +1,177 @@
 version: '3'
 
 tasks:
-  install-deps:
+  install-tools:
+    desc: Установка необходимых инструментов для разработки
     cmds:
+      - go install entgo.io/ent/cmd/ent@latest
       - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
       - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
-  get-deps:
+  install-deps:
+    desc: Установка зависимостей проекта
     cmds:
-      - go get -u google.golang.org/protobuf/cmd/protoc-gen-go
-      - go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+      - go mod download
+      - go mod tidy
+
+  generate-ent:
+    desc: Генерация Ent кода из схем
+    cmds:
+      - go run -mod=mod entgo.io/ent/cmd/ent generate ./ent/schema
 
   generate-grpc:
+    desc: Генерация gRPC кода из proto файлов
     cmds:
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/api')) { New-Item -ItemType Directory -Path 'pkg/grpc/api' }"
+      - mkdir -p pkg/grpc/health
+      - mkdir -p pkg/grpc/auth
+      - mkdir -p pkg/grpc/loans
+      - mkdir -p pkg/grpc/banks
+      - mkdir -p pkg/grpc/payments
       - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/api --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/api --go-grpc_opt=paths=source_relative \
-        proto/api.proto
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/ads')) { New-Item -ItemType Directory -Path 'pkg/grpc/ads' }"
+        protoc --proto_path=proto \
+        --go_out=pkg/grpc/health --go_opt=paths=source_relative \
+        --go-grpc_out=pkg/grpc/health --go-grpc_opt=paths=source_relative \
+        proto/health.proto
       - |
-       protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/ads --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/ads --go-grpc_opt=paths=source_relative \
-        proto/ads.proto
+        protoc --proto_path=proto \
+        --go_out=pkg/grpc/auth --go_opt=paths=source_relative \
+        --go-grpc_out=pkg/grpc/auth --go-grpc_opt=paths=source_relative \
+        proto/auth.proto
+      - |
+        protoc --proto_path=proto \
+        --go_out=pkg/grpc/loans --go_opt=paths=source_relative \
+        --go-grpc_out=pkg/grpc/loans --go-grpc_opt=paths=source_relative \
+        proto/loans.proto
+      - |
+        protoc --proto_path=proto \
+        --go_out=pkg/grpc/banks --go_opt=paths=source_relative \
+        --go-grpc_out=pkg/grpc/banks --go-grpc_opt=paths=source_relative \
+        proto/banks.proto
+      - |
+        protoc --proto_path=proto \
+        --go_out=pkg/grpc/payments --go_opt=paths=source_relative \
+        --go-grpc_out=pkg/grpc/payments --go-grpc_opt=paths=source_relative \
+        proto/payments.proto
 
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/campaigns')) { New-Item -ItemType Directory -Path 'pkg/grpc/campaigns' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/campaigns --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/campaigns --go-grpc_opt=paths=source_relative \
-        proto/campaigns.proto
-
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/advertisers')) { New-Item -ItemType Directory -Path 'pkg/grpc/advertisers' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/advertisers --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/advertisers --go-grpc_opt=paths=source_relative \
-        proto/advertisers.proto
-
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/time')) { New-Item -ItemType Directory -Path 'pkg/grpc/time' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/time --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/time --go-grpc_opt=paths=source_relative \
-        proto/time.proto
-
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/clients')) { New-Item -ItemType Directory -Path 'pkg/grpc/clients' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/clients --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/clients --go-grpc_opt=paths=source_relative \
-        proto/clients.proto
-
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/statistics')) { New-Item -ItemType Directory -Path 'pkg/grpc/statistics' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/statistics --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/statistics --go-grpc_opt=paths=source_relative \
-        proto/statistics.proto
-
-  generate-gateway:
+  generate-all:
+    desc: Генерация всего кода (Ent + gRPC)
     cmds:
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/api')) { New-Item -ItemType Directory -Path 'pkg/grpc/api' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/api --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/api --go-grpc_opt=paths=source_relative \
-        --grpc-gateway_out=pkg/grpc/api --grpc-gateway_opt=paths=source_relative \
-        proto/api.proto
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/ads')) { New-Item -ItemType Directory -Path 'pkg/grpc/ads' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/ads --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/ads --go-grpc_opt=paths=source_relative \
-        --grpc-gateway_out=pkg/grpc/ads --grpc-gateway_opt=paths=source_relative \
-        proto/ads.proto
+      - task: generate-ent
+      - task: generate-grpc
 
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/campaigns')) { New-Item -ItemType Directory -Path 'pkg/grpc/campaigns' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/campaigns --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/campaigns --go-grpc_opt=paths=source_relative \
-        --grpc-gateway_out=pkg/grpc/campaigns --grpc-gateway_opt=paths=source_relative \
-        proto/campaigns.proto
+  build:
+    desc: Сборка бинарного файла приложения
+    cmds:
+      - go build -o bin/server cmd/server/main.go
 
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/advertisers')) { New-Item -ItemType Directory -Path 'pkg/grpc/advertisers' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/advertisers --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/advertisers --go-grpc_opt=paths=source_relative \
-        --grpc-gateway_out=pkg/grpc/advertisers --grpc-gateway_opt=paths=source_relative \
-        proto/advertisers.proto
+  run:
+    desc: Запуск приложения локально
+    cmds:
+      - go run cmd/server/main.go
 
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/time')) { New-Item -ItemType Directory -Path 'pkg/grpc/time' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/time --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/time --go-grpc_opt=paths=source_relative \
-        --grpc-gateway_out=pkg/grpc/time --grpc-gateway_opt=paths=source_relative \
-        proto/time.proto
+  test:
+    desc: Запуск тестов
+    cmds:
+      - go test -v -race -coverprofile=coverage.out ./...
 
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/clients')) { New-Item -ItemType Directory -Path 'pkg/grpc/clients' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/clients --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/clients --go-grpc_opt=paths=source_relative \
-        --grpc-gateway_out=pkg/grpc/clients --grpc-gateway_opt=paths=source_relative \
-        proto/clients.proto
+  test-coverage:
+    desc: Запуск тестов с отчетом о покрытии
+    cmds:
+      - go test -v -race -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Coverage report generated at coverage.html"
 
-      - powershell -Command "if (-Not (Test-Path -Path 'pkg/grpc/statistics')) { New-Item -ItemType Directory -Path 'pkg/grpc/statistics' }"
-      - |
-        protoc --proto_path=proto --proto_path=./external \
-        --go_out=pkg/grpc/statistics --go_opt=paths=source_relative \
-        --go-grpc_out=pkg/grpc/statistics --go-grpc_opt=paths=source_relative \
-        --grpc-gateway_out=pkg/grpc/statistics --grpc-gateway_opt=paths=source_relative \
-        proto/statistics.proto
+  lint:
+    desc: Запуск линтера
+    cmds:
+      - golangci-lint run ./...
+
+  docker-build:
+    desc: Сборка Docker образа
+    cmds:
+      - docker build -t easyfund:latest .
+
+  docker-up:
+    desc: Запуск всех сервисов через docker compose
+    cmds:
+      - sh -c "docker compose up --build -d"
+
+  docker-down:
+    desc: Остановка всех сервисов docker compose
+    cmds:
+      - sh -c "docker compose down"
+
+  docker-logs:
+    desc: Просмотр логов app_service
+    cmds:
+      - sh -c "docker compose logs -f app_service"
+
+  docker-restart:
+    desc: Перезапуск всех сервисов
+    cmds:
+      - sh -c "docker compose restart"
+
+  migrate-up:
+    desc: Применение миграций базы данных
+    cmds:
+      - go run cmd/server/main.go migrate up
+
+  migrate-down:
+    desc: Откат миграций базы данных
+    cmds:
+      - go run cmd/server/main.go migrate down
+
+  migrate-create:
+    desc: Создание новой миграции
+    cmds:
+      - go run cmd/server/main.go migrate create {{.CLI_ARGS}}
+
+  clean:
+    desc: Очистка сгенерированных файлов и кэша
+    cmds:
+      - rm -rf bin/
+      - rm -rf pkg/grpc/
+      - go clean -cache
+      - go clean -testcache
+
+  dev:
+    desc: Запуск в режиме разработки с автоперезагрузкой
+    cmds:
+      - air
+
+  fmt:
+    desc: Форматирование кода
+    cmds:
+      - go fmt ./...
+      - goimports -w .
+
+  tidy:
+    desc: Очистка зависимостей
+    cmds:
+      - go mod tidy
+
+  deps-upgrade:
+    desc: Обновление всех зависимостей
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+
+  proto-lint:
+    desc: Проверка proto файлов
+    cmds:
+      - buf lint
+
+  swagger-generate:
+    desc: Генерация Swagger документации
+    cmds:
+      - swag init -g cmd/server/main.go -o ./docs
+
+  seed:
+    desc: Заполнение базы данных тестовыми данными
+    cmds:
+      - go run cmd/seed/main.go
+
+  help:
+    desc: Показать все доступные команды
+    cmds:
+      - task --list
