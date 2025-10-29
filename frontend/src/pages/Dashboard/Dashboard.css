@@ -133,3 +133,134 @@
   margin: 0;
 }
 
+/* New dashboard grid and panels */
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-3xl);
+}
+
+.dashboard__panel {
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+}
+
+.dashboard__panel-title {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Layout spans for typical wide screens */
+@media (min-width: 900px) {
+  .dashboard__panel:nth-child(1) { grid-column: span 6; }
+  .dashboard__panel:nth-child(2) { grid-column: span 6; }
+  .dashboard__panel:nth-child(3) { grid-column: span 6; }
+  .dashboard__panel:nth-child(4) { grid-column: span 6; }
+  .dashboard__panel:nth-child(5) { grid-column: span 8; }
+  .dashboard__panel:nth-child(6) { grid-column: span 4; }
+  .dashboard__panel:nth-child(7) { grid-column: span 12; }
+}
+
+/* 1) Progress bar */
+.dashboard__progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.dashboard__progress {
+  width: 100%;
+  height: 14px;
+  background: var(--color-background-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.dashboard__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success-500), var(--color-primary-600));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-base);
+}
+
+.dashboard__progress-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* 2) History */
+.dashboard__history {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard__history-item {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.dashboard__history-item:last-child { border-bottom: none; }
+
+.dashboard__history-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--color-primary-100);
+  border-radius: var(--radius-full);
+}
+
+.dashboard__history-info { display: flex; flex-direction: column; }
+.dashboard__history-title { font-weight: var(--font-weight-medium); }
+.dashboard__history-sub { color: var(--color-text-tertiary); font-size: var(--font-size-sm); }
+.dashboard__history-amount { font-weight: var(--font-weight-semibold); color: var(--color-error-600); }
+
+/* 3) Donut */
+.dashboard__donut {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+
+.dashboard__legend { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.dashboard__legend-row { display: grid; grid-template-columns: 12px 1fr auto; gap: var(--spacing-sm); align-items: center; }
+.dashboard__legend-dot { width: 12px; height: 12px; border-radius: var(--radius-full); background: var(--color-primary-500); }
+.dashboard__legend-label { color: var(--color-text-secondary); }
+.dashboard__legend-value { font-weight: var(--font-weight-medium); }
+
+/* 5) Linechart */
+.dashboard__linechart { width: 100%; height: 180px; }
+
+/* 6) Scoring */
+.dashboard__score { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.dashboard__score-value { font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold); }
+.dashboard__score-meter { width: 100%; height: 10px; background: var(--color-background-secondary); border-radius: var(--radius-full); overflow: hidden; }
+.dashboard__score-good { height: 100%; background: linear-gradient(90deg, var(--color-warning-500), var(--color-success-500)); }
+.dashboard__score-scale { display: flex; justify-content: space-between; color: var(--color-text-tertiary); font-size: var(--font-size-xs); }
+
+/* 7) Offers */
+.dashboard__offers { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.dashboard__offer-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: var(--spacing-md); padding: var(--spacing-sm) 0; }
+.dashboard__offer-icon { width: 36px; height: 24px; border-radius: var(--radius-sm); background: var(--color-info-100); border: 1px solid var(--color-border); }
+.dashboard__offer-title { font-weight: var(--font-weight-medium); }
+.dashboard__offer-sub { color: var(--color-text-tertiary); font-size: var(--font-size-sm); }
+
+/* Chart colors (scoped via CSS variables here) */
+:root {
+  --chart-1: #0ea5e9;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #a855f7;
+  --chart-6: #14b8a6;
+}
+
