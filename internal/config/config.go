@@ -1,35 +1,66 @@
 package config
 
 import (
-	"github.com/joho/godotenv"
 	"os"
+	"strconv"
 )
 
 type Config struct {
-	PostgresURL  string
-	RedisAddr    string
-	RedisPass    string
-	GRPCAddress  string
-	HTTPAddress  string
-	JWTSecret    string
+	// Server
+	Port        string
+	Environment string
+
+	// Virtual Bank API
+	VBankBaseURL       string
+	VBankClientID      string
+	VBankClientSecret  string
+	RequestingBankName string
+
+	// JWT
+	JWTSecret      string
+	JWTExpiryHours int
+
+	// CORS
+	CORSAllowedOrigins []string
+	CORSAllowedMethods []string
+	CORSAllowedHeaders []string
 }
 
-func Load() (*Config, error) {
-	_ = godotenv.Load()
-
+func LoadConfig() *Config {
 	return &Config{
-		PostgresURL: getEnv("PG_STRING", "postgresql://easyfund:easyfund123@localhost:5434/easyfund_db?sslmode=disable"),
-		RedisAddr:   getEnv("REDIS_ADDRESS", "localhost:6378"),
-		RedisPass:   getEnv("REDIS_PASSWORD", "redis123"),
-		GRPCAddress: getEnv("GRPC_ADDRESS", ":9000"),
-		HTTPAddress: getEnv("HTTP_ADDRESS", ":8080"),
-		JWTSecret:   getEnv("JWT_SECRET", "your-super-secret-jwt-key"),
-	}, nil
+		// Server
+		Port:        getEnv("PORT", "8080"),
+		Environment: getEnv("ENVIRONMENT", "development"),
+
+		// Virtual Bank API
+		VBankBaseURL:       getEnv("VBANK_BASE_URL", "https://vbank.open.bankingapi.ru"),
+		VBankClientID:      getEnv("VBANK_CLIENT_ID", "team080"),
+		VBankClientSecret:  getEnv("VBANK_CLIENT_SECRET", "dpzKsUNyd5PSMmqk8vEA4FBA4lu1XdzK"),
+		RequestingBankName: getEnv("REQUESTING_BANK_NAME", "EasyFund Consortium Platform"),
+
+		// JWT
+		JWTSecret:      getEnv("JWT_SECRET", "your-super-secret-jwt-key-for-easyfund-2024"),
+		JWTExpiryHours: getEnvAsInt("JWT_EXPIRY_HOURS", 24),
+
+		// CORS
+		CORSAllowedOrigins: []string{"*"},
+		CORSAllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		CORSAllowedHeaders: []string{"Content-Type", "Authorization", "X-Requested-With"},
+	}
 }
 
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
+func getEnv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
-	return fallback
+	return defaultValue
+}
+
+func getEnvAsInt(key string, defaultValue int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
 }

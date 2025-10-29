@@ -1,32 +1,69 @@
 package http
 
 import (
-	"github.com/gin-contrib/cors"
+	"github.com/Arlandaren/easyfund/internal/config"
+	"github.com/Arlandaren/easyfund/internal/usecase"
+	"github.com/Arlandaren/easyfund/pkg/banking"
+	"github.com/Arlandaren/easyfund/pkg/middleware"
+
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func NewRouter() *gin.Engine {
+func SetupRouter(config *config.Config) *gin.Engine {
+	// Инициализируем клиенты и сервисы
+	vbankClient := banking.NewVBankClient(
+		config.VBankBaseURL,
+		config.VBankClientID,
+		config.VBankClientSecret,
+	)
+
+	// Инициализируем use cases
+	authUsecase := usecase.NewAuthUsecase(config, vbankClient)
+	bankingUsecase := usecase.NewBankingUsecase(vbankClient)
+
+	// Инициализируем handlers
+	authHandler := NewAuthHandler(authUsecase)
+	bankingHandler := NewBankingHandler(bankingUsecase)
+	healthHandler := NewHealthHandler()
+
+	// Настраиваем роутер
+	if config.Environment == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r := gin.Default()
 
-	// CORS
-	r.Use(cors.Default())
-
-	// Metrics
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	// Middleware
+	r.Use(middleware.CORSMiddleware(config))
+	r.Use(gin.Recovery())
+	r.Use(gin.Logger())
 
 	// Health check
-	r.GET("/ping", HealthCheck)
+	r.GET("/health", healthHandler.HealthCheck)
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "pong"})
+	})
 
-	// API routes
-	api := r.Group("/api/v1")
+	// API v1
+	v1 := r.Group("/api/v1")
+
+	// Auth routes (публичные)
+	auth := v1.Group("/auth")
 	{
-		api.POST("/auth/register", func(c *gin.Context) {
-			c.JSON(200, gin.H{"message": "register endpoint"})
-		})
-		api.POST("/auth/login", func(c *gin.Context) {
-			c.JSON(200, gin.H{"message": "login endpoint"})
-		})
+		auth.GET("/random-demo-client", authHandler.GetRandomDemoClient)
+		auth.POST("/login-demo-client", authHandler.LoginDemoClient)
+		auth.POST("/login", authHandler.Login)
+		auth.POST("/register", authHandler.Register)
+	}
+
+	// Banking routes (защищенные)
+	banking := v1.Group("/banking")
+	banking.Use(middleware.AuthMiddleware(authUsecase))
+	{
+		banking.GET("/accounts", bankingHandler.GetAccounts)
+		banking.GET("/accounts/:account_id/transactions", bankingHandler.GetTransactions)
+		banking.GET("/accounts/:account_id/balances", bankingHandler.GetBalances)
+		banking.GET("/insights", bankingHandler.GetFinancialInsights)
 	}
 
 	return r

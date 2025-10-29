@@ -1,52 +1,156 @@
 package usecase
 
 import (
-	"context"
-	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/Arlandaren/easyfund/internal/repository"
-	"golang.org/x/crypto/bcrypt"
-	"time"
+    "github.com/Arlandaren/easyfund/internal/config"
+    "github.com/Arlandaren/easyfund/pkg/banking"
+    "fmt"
+    "time"
+
+    "github.com/golang-jwt/jwt/v5"
+    "github.com/google/uuid"
 )
 
-type AuthUseCase struct {
-	repo      *repository.UserRepository
-	jwtSecret string
+type AuthUsecase struct {
+    config      *config.Config
+    vbankClient *banking.VBankClient
 }
 
-func NewAuthUseCase(repo *repository.UserRepository, jwtSecret string) *AuthUseCase {
-	return &AuthUseCase{
-		repo:      repo,
-		jwtSecret: jwtSecret,
-	}
+func NewAuthUsecase(config *config.Config, vbankClient *banking.VBankClient) *AuthUsecase {
+    return &AuthUsecase{
+        config:      config,
+        vbankClient: vbankClient,
+    }
 }
 
-func (uc *AuthUseCase) Register(ctx context.Context, email, password, role string) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	_, err = uc.repo.Create(ctx, email, string(hash), role)
-	return err
+func (a *AuthUsecase) GetRandomDemoClient() (*banking.RandomClientResponse, error) {
+    return a.vbankClient.GetRandomDemoClient()
 }
 
-func (uc *AuthUseCase) Login(ctx context.Context, email, password string) (string, error) {
-	user, err := uc.repo.GetByEmail(ctx, email)
-	if err != nil {
-		return "", errors.New("invalid credentials")
-	}
+// LoginDemoClient теперь принимает DemoClientLoginRequest с personID и password,
+// чтобы использовать правильный пароль для логина.
+func (a *AuthUsecase) LoginDemoClient(req *banking.DemoClientLoginRequest) (*banking.AuthResponse, error) {
+    loginResp, err := a.vbankClient.LoginClient(req.PersonID, req.Password)
+    if err != nil {
+        return nil, err
+    }
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", errors.New("invalid credentials")
-	}
+    user := banking.User{
+        ID:       uuid.New().String(),
+        Name:     req.FullName,
+        Email:    req.PersonID + "@demo.easyfund.ru",
+        Role:     "borrower",
+        PersonID: req.PersonID,
+    }
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"role":    user.Role,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
-	})
+    // Передаем токен VBank в JWT
+    token, err := a.generateJWT(user, "demo", loginResp.AccessToken)
+    if err != nil {
+        return nil, err
+    }
 
-	return token.SignedString([]byte(uc.jwtSecret))
+    return &banking.AuthResponse{
+        Token:     token,
+        TokenType: "Bearer",
+        User:      user,
+    }, nil
+}
+
+func (a *AuthUsecase) Login(req *banking.LoginRequest) (*banking.AuthResponse, error) {
+    if req.Email == "admin@easyfund.ru" && req.Password == "password123" {
+        user := banking.User{
+            ID:    uuid.New().String(),
+            Name:  "Administrator",
+            Email: req.Email,
+            Role:  "admin",
+        }
+
+        token, err := a.generateJWT(user, "regular", "")
+        if err != nil {
+            return nil, fmt.Errorf("failed to generate JWT: %w", err)
+        }
+
+        return &banking.AuthResponse{
+            Token:     token,
+            TokenType: "Bearer",
+            User:      user,
+        }, nil
+    }
+
+    return nil, fmt.Errorf("invalid credentials")
+}
+
+func (a *AuthUsecase) Register(req *banking.RegisterRequest) (*banking.AuthResponse, error) {
+    user := banking.User{
+        ID:    uuid.New().String(),
+        Name:  req.Name,
+        Email: req.Email,
+        Role:  req.Role,
+    }
+
+    token, err := a.generateJWT(user, "regular", "")
+    if err != nil {
+        return nil, fmt.Errorf("failed to generate JWT: %w", err)
+    }
+
+    return &banking.AuthResponse{
+        Token:     token,
+        TokenType: "Bearer",
+        User:      user,
+    }, nil
+}
+
+func (a *AuthUsecase) ValidateJWT(tokenString string) (*banking.JWTClaims, error) {
+    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
+        return []byte(a.config.JWTSecret), nil
+    })
+
+    if err != nil {
+        return nil, err
+    }
+
+    if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+        jwtClaims := &banking.JWTClaims{
+            UserID: claims["user_id"].(string),
+            Email:  claims["email"].(string),
+            Mode:   claims["mode"].(string),
+            Role:   claims["role"].(string),
+        }
+
+        if personID, exists := claims["person_id"]; exists && personID != nil {
+            jwtClaims.PersonID = personID.(string)
+        }
+
+        if vbankToken, exists := claims["vbank_token"]; exists && vbankToken != nil {
+            jwtClaims.VBankAccessToken = vbankToken.(string)
+        }
+
+        return jwtClaims, nil
+    }
+
+    return nil, fmt.Errorf("invalid token")
+}
+
+func (a *AuthUsecase) generateJWT(user banking.User, mode, vbankToken string) (string, error) {
+    claims := jwt.MapClaims{
+        "user_id": user.ID,
+        "email":   user.Email,
+        "role":    user.Role,
+        "mode":    mode,
+        "exp":     time.Now().Add(time.Hour * time.Duration(a.config.JWTExpiryHours)).Unix(),
+        "iat":     time.Now().Unix(),
+    }
+
+    if user.PersonID != "" {
+        claims["person_id"] = user.PersonID
+    }
+
+    if vbankToken != "" {
+        claims["vbank_token"] = vbankToken
+    }
+
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    return token.SignedString([]byte(a.config.JWTSecret))
 }
