@@ -1,0 +1,101 @@
+.applications {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.applications__loading {
+  text-align: center;
+  padding: var(--spacing-3xl);
+}
+
+.applications__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2xl);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.applications__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.applications__filters {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.applications__search {
+  flex: 1;
+  min-width: 250px;
+}
+
+.applications__list {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.applications__empty {
+  text-align: center;
+  padding: var(--spacing-3xl);
+}
+
+.applications__item {
+  cursor: pointer;
+  transition: all var(--transition-base);
+  padding: var(--spacing-lg);
+}
+
+.applications__item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.applications__item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.applications__item-amount {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.applications__item-purpose {
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.applications__item-status {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-background-secondary);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.applications__item-footer {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.applications__item-date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+

@@ -1,0 +1,2 @@
+export { ApplicationsList } from './ApplicationsList';
+

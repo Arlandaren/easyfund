@@ -1,0 +1,198 @@
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 200px);
+  padding: var(--spacing-2xl);
+  background-color: var(--color-background-secondary);
+}
+
+.login__container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-3xl);
+  max-width: 1200px;
+  width: 100%;
+  align-items: start;
+}
+
+.login__left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.login__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.login__title-highlight {
+  color: var(--color-primary);
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.login__input {
+  margin-bottom: var(--spacing-sm);
+}
+
+.login__submit-btn {
+  margin-top: var(--spacing-md);
+}
+
+.login__gosuslugi-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  width: 100%;
+  justify-content: center;
+}
+
+.login__gosuslugi-btn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.login__helper-text {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.login__error {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-error-50);
+  color: var(--color-error-700);
+  border: 1px solid var(--color-error-200);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+}
+
+/* Right side - Role selection */
+.login__right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.login__role-card {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  background-color: var(--color-background-secondary);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: left;
+}
+
+.login__role-card--selected {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-700) 100%);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.login__role-card:not(.login__role-card--selected):hover {
+  background-color: white;
+  border-color: var(--color-primary);
+}
+
+.login__role-radio {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.login__role-radio-inner {
+  width: 12px;
+  height: 12px;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+}
+
+.login__role-card--selected .login__role-radio {
+  border-color: white;
+}
+
+.login__role-card--selected .login__role-radio-inner {
+  background-color: white;
+}
+
+.login__role-content {
+  flex: 1;
+}
+
+.login__role-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--spacing-xs) 0;
+  color: inherit;
+}
+
+.login__role-description {
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  margin: 0;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.login__role-card:not(.login__role-card--selected) .login__role-title {
+  color: var(--color-text-primary);
+}
+
+.login__role-card:not(.login__role-card--selected) .login__role-description {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.login__info {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+}
+
+.login__test-info {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  background-color: rgba(24, 156, 244, 0.1);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  display: inline-block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login__container {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+  
+  .login__title {
+    font-size: var(--font-size-2xl);
+  }
+}
