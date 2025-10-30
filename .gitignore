@@ -12,6 +12,9 @@
 *~
 
 frontend/node_modules/
+.frontend
+/frontend
+
 # Бинарные файлы
 *.exe
 *.out

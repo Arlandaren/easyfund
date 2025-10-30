@@ -1,72 +1,60 @@
 package http
 
 import (
-	"github.com/Arlandaren/easyfund/internal/config"
-	"github.com/Arlandaren/easyfund/internal/usecase"
-	"github.com/Arlandaren/easyfund/pkg/banking"
-	"github.com/Arlandaren/easyfund/pkg/middleware"
+    "github.com/Arlandaren/easyfund/internal/config"
+    "github.com/Arlandaren/easyfund/internal/usecase"
+    "github.com/Arlandaren/easyfund/pkg/banking"
+    "github.com/Arlandaren/easyfund/pkg/middleware"
 
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
 )
 
-func SetupRouter(config *config.Config) *gin.Engine {
-	// Инициализируем клиенты и сервисы
-	vbankClient := banking.NewVBankClient(
-		config.VBankBaseURL,
-		config.VBankClientID,
-		config.VBankClientSecret,
-	)
+func SetupRouter(cfg *config.Config) *gin.Engine {
+    // Реальный клиент
+    var vbankClient banking.VBankAPI = banking.NewVBankClient(
+        cfg.VBankBaseURL,
+        cfg.VBankClientID,
+        cfg.VBankClientSecret,
+    )
 
-	// Инициализируем use cases
-	authUsecase := usecase.NewAuthUsecase(config, vbankClient)
-	bankingUsecase := usecase.NewBankingUsecase(vbankClient)
+    authUsecase := usecase.NewAuthUsecase(cfg, vbankClient.(*banking.VBankClient))
+    bankingUsecase := usecase.NewBankingUsecase(vbankClient)
 
-	// Инициализируем handlers
-	authHandler := NewAuthHandler(authUsecase)
-	bankingHandler := NewBankingHandler(bankingUsecase, *vbankClient)
-	healthHandler := NewHealthHandler()
+    authHandler := NewAuthHandler(authUsecase)
+    bankingHandler := NewBankingHandler(bankingUsecase, vbankClient)
+    healthHandler := NewHealthHandler()
 
-	// Настраиваем роутер
-	if config.Environment == "production" {
-		gin.SetMode(gin.ReleaseMode)
-	}
+    if cfg.Environment == "production" {
+        gin.SetMode(gin.ReleaseMode)
+    }
+    r := gin.Default()
 
-	r := gin.Default()
+    r.Use(middleware.CORSMiddleware(cfg))
+    r.Use(gin.Recovery())
+    r.Use(gin.Logger())
 
-	// Middleware
-	r.Use(middleware.CORSMiddleware(config))
-	r.Use(gin.Recovery())
-	r.Use(gin.Logger())
+    r.GET("/health", healthHandler.HealthCheck)
+    r.GET("/ping", func(c *gin.Context) { c.JSON(200, gin.H{"message": "pong"}) })
 
-	// Health check
-	r.GET("/health", healthHandler.HealthCheck)
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "pong"})
-	})
+    v1 := r.Group("/api/v1")
 
-	// API v1
-	v1 := r.Group("/api/v1")
+    auth := v1.Group("/auth")
+    {
+        auth.GET("/random-demo-client", authHandler.GetRandomDemoClient)
+        auth.POST("/login-demo-client", authHandler.LoginDemoClient)
+        auth.POST("/login", authHandler.Login)
+        auth.POST("/register", authHandler.Register)
+    }
 
-	// Auth routes (публичные)
-	auth := v1.Group("/auth")
-	{
-		auth.GET("/random-demo-client", authHandler.GetRandomDemoClient)
-		auth.POST("/login-demo-client", authHandler.LoginDemoClient)
-		auth.POST("/login", authHandler.Login)
-		auth.POST("/register", authHandler.Register)
-	}
+    bankingGroup := v1.Group("/banking")
+    bankingGroup.Use(middleware.AuthMiddleware(authUsecase))
+    {
+        bankingGroup.GET("/accounts", bankingHandler.GetAccounts)
+        bankingGroup.GET("/accounts/:account_id/transactions", bankingHandler.GetTransactions)
+        bankingGroup.GET("/accounts/:account_id/balances", bankingHandler.GetBalances)
+        bankingGroup.GET("/insights", bankingHandler.GetFinancialInsights)
+        bankingGroup.POST("/create-consent", bankingHandler.CreateConsent)
+    }
 
-	// Banking routes (защищенные)
-	banking := v1.Group("/banking")
-	banking.Use(middleware.AuthMiddleware(authUsecase))
-	{
-		banking.GET("/accounts", bankingHandler.GetAccounts)
-		banking.GET("/accounts/:account_id/transactions", bankingHandler.GetTransactions)
-		banking.GET("/accounts/:account_id/balances", bankingHandler.GetBalances)
-		banking.GET("/insights", bankingHandler.GetFinancialInsights)
-		banking.POST("/create-consent", bankingHandler.CreateConsent)
-
-	}
-
-	return r
+    return r
 }

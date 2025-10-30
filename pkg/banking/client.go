@@ -1,12 +1,23 @@
 package banking
 
-// BankingClient интерфейс для клиента банка
-type BankingClient interface {
-	GetRandomDemoClient() (*RandomClientResponse, error)
-	GetBankToken() (string, error)
-	LoginClient(username, password string) (*ClientLoginResponse, error)
-	GetAccounts(clientToken string) (*AccountsResponse, error)
-	GetTransactions(clientToken, accountID string, page, limit int) (*TransactionsResponse, error)
-	GetBalances(clientToken, accountID string) (*BalancesResponse, error)
-	CreateConsent(clientID, requestingBank, requestingBankName string) (*ConsentResponse, error)
+// VBankAPI — интерфейс клиента Virtual Bank, который используют usecase/handlers.
+type VBankAPI interface {
+    // Token
+    GetBankToken() (string, error)
+
+    // Demo/login
+    GetRandomDemoClient() (*RandomClientResponse, error)
+    LoginClient(username, password string) (*ClientLoginResponse, error)
+
+    // Consent
+    CreateConsent(clientID, requestingBank, requestingBankName string) (*ConsentResponse, error)
+
+    // Data (через consent)
+    GetAccountsWithConsent(clientID, consentID string) (*AccountsResponse, error)
+    GetTransactionsWithConsent(accountID, clientID, consentID string, page, limit int) (*TransactionsResponse, error)
+    GetBalancesWithConsent(accountID, clientID, consentID string) (*BalancesResponse, error)
 }
+
+// Гарантируем на этапе компиляции соответствие интерфейсу.
+var _ VBankAPI = (*VBankClient)(nil)
+var _ VBankAPI = (*MockClient)(nil)

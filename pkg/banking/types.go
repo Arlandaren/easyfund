@@ -141,17 +141,31 @@ type DemoClientLoginRequest struct {
 
 // JWT Claims
 type JWTClaims struct {
-	UserID   string `json:"user_id"`
-	Email    string `json:"email"`
-	PersonID string `json:"person_id,omitempty"`
-	Mode     string `json:"mode"` // "demo" или "regular"
-	Role     string `json:"role"`
-	VBankAccessToken string `json:"vbank_token,omitempty"`
+    // Идентификаторы
+    UserID   string `json:"user_id"`              // внутренний ID пользователя в вашем сервисе
+    ClientID string `json:"client_id,omitempty"`  // ключевое поле: ID клиента в Virtual Bank
+    PersonID string `json:"person_id,omitempty"`  // опционально, если используется отдельно от client_id
+
+    // Контактные/ролевые данные
+    Email string `json:"email,omitempty"`
+    Mode  string `json:"mode,omitempty"` // "demo" или "regular"
+    Role  string `json:"role,omitempty"`
+
+    // Токены и интеграции
+    VBankAccessToken string `json:"vbank_token,omitempty"` // если где-то используется клиентский UI-токен VB (обычно не нужен серверу)
+
+    // Стандартные JWT-поля для валидации (опционально, но полезно иметь)
+    Issuer   string `json:"iss,omitempty"`
+    Subject  string `json:"sub,omitempty"`
+    Audience string `json:"aud,omitempty"`
+    IssuedAt int64  `json:"iat,omitempty"`
+    Expires  int64  `json:"exp,omitempty"`
+    NotBefore int64 `json:"nbf,omitempty"`
 }
 
 // Error Response
 type ErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message"`
-	Code    int    `json:"code,omitempty"`
+    Error   string `json:"error"`
+    Message string `json:"message,omitempty"`
+    Code    int    `json:"code"`
 }
