@@ -11,11 +11,12 @@ import (
 
 type BankingHandler struct {
     bankingUsecase *usecase.BankingUsecase
+    vbankClient    banking.VBankClient // Add the vbankClient field
 }
-
-func NewBankingHandler(bankingUsecase *usecase.BankingUsecase) *BankingHandler {
+func NewBankingHandler(bankingUsecase *usecase.BankingUsecase, vbankClient banking.VBankClient) *BankingHandler {
     return &BankingHandler{
         bankingUsecase: bankingUsecase,
+        vbankClient:    vbankClient, // Initialize the vbankClient field
     }
 }
 
@@ -128,4 +129,28 @@ func (h *BankingHandler) GetFinancialInsights(c *gin.Context) {
         "insights": insights,
         "message":  "Financial insights generated successfully",
     })
+}
+
+
+type CreateConsentRequest struct {
+    ClientID          string `json:"client_id" binding:"required"`
+    RequestingBank    string `json:"requesting_bank" binding:"required"`
+    RequestingBankName string `json:"requesting_bank_name" binding:"required"`
+}
+
+
+func (h *BankingHandler) CreateConsent(c *gin.Context) {
+    var req CreateConsentRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    consentResp, err := h.vbankClient.CreateConsent(req.ClientID, req.RequestingBank, req.RequestingBankName)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, consentResp)
 }

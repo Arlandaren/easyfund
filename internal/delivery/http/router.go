@@ -23,7 +23,7 @@ func SetupRouter(config *config.Config) *gin.Engine {
 
 	// Инициализируем handlers
 	authHandler := NewAuthHandler(authUsecase)
-	bankingHandler := NewBankingHandler(bankingUsecase)
+	bankingHandler := NewBankingHandler(bankingUsecase, *vbankClient)
 	healthHandler := NewHealthHandler()
 
 	// Настраиваем роутер
@@ -64,6 +64,8 @@ func SetupRouter(config *config.Config) *gin.Engine {
 		banking.GET("/accounts/:account_id/transactions", bankingHandler.GetTransactions)
 		banking.GET("/accounts/:account_id/balances", bankingHandler.GetBalances)
 		banking.GET("/insights", bankingHandler.GetFinancialInsights)
+		banking.POST("/create-consent", bankingHandler.CreateConsent)
+
 	}
 
 	return r
