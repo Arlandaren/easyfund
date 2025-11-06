@@ -1,0 +1,123 @@
+.debt-overview-section {
+  position: absolute;
+  top: 195px;
+  left: 1077px;
+  width: 320px;
+  height: 455px;
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0px 4px 24px rgba(24, 156, 244, 0.05);
+  padding: 16px 21px;
+}
+
+.debt-overview-section__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 278px;
+}
+
+.debt-overview-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.debt-overview-section__title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #082131;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.debt-overview-section__filter {
+  display: flex;
+  width: 64px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFFFF;
+  border: 1px solid #C2C2C2;
+  border-radius: 14px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  color: #C2C2C2;
+  cursor: pointer;
+  padding: 0;
+}
+
+.debt-overview-section__filter:hover {
+  border-color: #189CF4;
+  color: #189CF4;
+}
+
+.debt-overview-section__list {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.debt-overview-section__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.debt-overview-section__item-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.debt-overview-section__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.debt-overview-section__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 166px;
+}
+
+.debt-overview-section__item-company {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  color: #082131;
+  line-height: 1.2;
+}
+
+.debt-overview-section__item-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #082131;
+  line-height: 1.2;
+}
+
+.debt-overview-section__item-amount {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #082131;
+  white-space: nowrap;
+}
+
+.debt-overview-section__item-amount--positive {
+  color: #DB1414;
+}
+

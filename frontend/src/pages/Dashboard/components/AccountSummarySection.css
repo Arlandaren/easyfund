@@ -1,0 +1,111 @@
+.account-summary-section {
+  position: absolute;
+  top: 420px;
+  left: 42px;
+  width: 460px;
+  height: 465px;
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0px 4px 24px rgba(24, 156, 244, 0.05);
+  padding: 19px 29px;
+}
+
+.account-summary-section__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.account-summary-section__header {
+  margin-bottom: 22px;
+}
+
+.account-summary-section__title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #082131;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.account-summary-section__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.account-summary-section__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.account-summary-section__item-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.account-summary-section__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.account-summary-section__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 225px;
+}
+
+.account-summary-section__item-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #082131;
+  line-height: 1.2;
+}
+
+.account-summary-section__item-date {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #C2C2C2;
+  line-height: 1.2;
+}
+
+.account-summary-section__item-amount {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #082131;
+  white-space: nowrap;
+}
+
+.account-summary-section__view-all {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #189CF4;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  margin-top: auto;
+}
+
+.account-summary-section__view-all:hover {
+  opacity: 0.8;
+}
+

@@ -1,0 +1,261 @@
+.login-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #FCFEFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.login-page__background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 589px;
+  height: 749px;
+  background: linear-gradient(135deg, rgba(24, 156, 244, 0.05) 0%, rgba(24, 156, 244, 0.02) 100%);
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.login-page__card {
+  position: relative;
+  z-index: 1;
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0px 4px 24px 0px rgba(24, 156, 244, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.login-page__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #082131;
+  margin: 0;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.login-page__title-highlight {
+  color: #189CF4;
+}
+
+/* Role selection */
+.login-page__roles {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-page__role-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  align-items: flex-start;
+}
+
+.login-page__role-card--selected {
+  background: linear-gradient(135deg, #189CF4 0%, #38bdf8 100%);
+  border-color: #189CF4;
+  color: white;
+}
+
+.login-page__role-card:not(.login-page__role-card--selected):hover {
+  border-color: #189CF4;
+  background-color: #F9FBFD;
+}
+
+.login-page__role-radio {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #189CF4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.2s ease;
+}
+
+.login-page__role-card--selected .login-page__role-radio {
+  border-color: white;
+}
+
+.login-page__role-radio-inner {
+  width: 12px;
+  height: 12px;
+  background-color: #189CF4;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.login-page__role-card--selected .login-page__role-radio-inner {
+  background-color: white;
+}
+
+.login-page__role-content {
+  flex: 1;
+}
+
+.login-page__role-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: inherit;
+}
+
+.login-page__role-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.login-page__role-card:not(.login-page__role-card--selected) .login-page__role-title {
+  color: #082131;
+}
+
+.login-page__role-card:not(.login-page__role-card--selected) .login-page__role-description {
+  color: #525252;
+  opacity: 1;
+}
+
+/* Form */
+.login-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.login-page__input {
+  margin: 0;
+}
+
+.login-page__input .input-container .input {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+}
+
+.login-page__input .input-container .input:focus {
+  border-color: #189CF4;
+  box-shadow: 0 0 0 3px rgba(24, 156, 244, 0.1);
+}
+
+.login-page__submit-btn {
+  margin-top: 0.5rem;
+}
+
+.login-page__error {
+  padding: 0.75rem 1rem;
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FEE2E2;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Social login */
+.login-page__social {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.login-page__social-text {
+  text-align: center;
+  color: #737373;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.login-page__social-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.login-page__gosuslugi-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #082131;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.login-page__gosuslugi-btn:hover {
+  border-color: #189CF4;
+  background-color: #F9FBFD;
+}
+
+.login-page__gosuslugi-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+/* Footer */
+.login-page__footer {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.login-page__footer-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login-page {
+    min-width: 100%;
+    padding: 1rem;
+  }
+
+  .login-page__card {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+
+  .login-page__title {
+    font-size: 1.5rem;
+  }
+
+  .login-page__social-buttons {
+    grid-template-columns: 1fr;
+  }
+}

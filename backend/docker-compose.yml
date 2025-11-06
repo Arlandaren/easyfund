@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   app:
     driver: bridge
@@ -55,7 +53,7 @@ services:
   # PostgreSQL Database
   # ============================================
   postgres:
-    image: postgres:15-alpine
+    image: postgres:latest
     container_name: easyfund_postgres
     restart: always
     environment:
