@@ -6,7 +6,7 @@ import './Register.css';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
