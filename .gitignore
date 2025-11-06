@@ -26,8 +26,6 @@ config.yaml
 secrets/
 
 # Docker и Makefile
-.dockerignore
-Dockerfile*
 .docker/
 Makefile.local
 
