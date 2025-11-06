@@ -32,11 +32,11 @@ jobs:
       # Создание .env из base64-секрета
       - name: Create .env file
         run: |
-          echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > .env
+          echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > ./backend/.env
 
       # Сборка Docker-образа
       - name: Build Docker image
-        run: docker compose --env-file=.env build
+        run: docker compose --env-file=./backend/.env -f ./backend/docker-compose.yml build
 
       # Сохранение Docker-образа в tar-файл
       - name: Save Docker image
@@ -66,6 +66,7 @@ jobs:
         run: |
           rsync -avz --delete \
             --exclude='.git/' \
+            --exclude='backend/' \
             --exclude='node_modules/' \
             -e "ssh -o StrictHostKeyChecking=no" \
             ./ \

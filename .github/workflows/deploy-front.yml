@@ -19,19 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: cd frontend && npm ci
-
-      - name: Build frontend
-        run: cd frontend && npm run build
-
         # Установка Docker Buildx и логин в Docker Hub
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -44,7 +31,7 @@ jobs:
 
       # Сборка Docker-образа
       - name: Build Docker image
-        run: docker compose --env-file=.env build
+        run: docker compose -f ./frontend/docker-compose.yml build
 
       # Сохранение Docker-образа в tar-файл
       - name: Save Docker image
