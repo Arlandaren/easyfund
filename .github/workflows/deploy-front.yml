@@ -1,0 +1,70 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+env:
+  DEPLOY_PATH: /var/www/easyfund-frontend
+  SERVER_DOMAIN: your-domain.com
+  SERVER_USER: user
+
+jobs:
+  deploy_frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Create production files
+        run: |
+          cd frontend
+          mkdir -p deploy
+          cp -r dist/* deploy/
+          cp nginx.conf deploy/
+          # Создаем docker-compose для фронтенда
+          cat > deploy/docker-compose.yml << EOF
+          version: '3.8'
+          services:
+            frontend:
+              image: nginx:alpine
+              container_name: easyfund-frontend
+              ports:
+                - "3000:80"
+              volumes:
+                - ./:/usr/share/nginx/html
+                - ./nginx.conf:/etc/nginx/conf.d/default.conf
+              restart: unless-stopped
+          EOF
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.SERVER_DOMAIN }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          scp -r frontend/deploy/* ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }}:${{ env.DEPLOY_PATH }}/
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} "
+            cd ${{ env.DEPLOY_PATH }}
+            docker-compose down
+            docker-compose up -d
+          "

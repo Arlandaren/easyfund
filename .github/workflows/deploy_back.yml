@@ -2,8 +2,10 @@ name: Build & Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-back.yml'
 
 env:
   DEPLOY_PATH: /path
@@ -11,7 +13,7 @@ env:
   SERVER_USER: user
 
 jobs:
-  build_and_deploy:
+  deploy_backend:
     runs-on: ubuntu-latest
     needs: lint
     steps:
