@@ -1,314 +1,343 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Layout, Card, Button } from '../../components';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { loanApplicationsAPI, banksAPI } from '../../utils/api';
+import {
+  AccountSummarySection,
+  CreditScoreSection,
+  DebtOverviewSection,
+  FinancialGoalsSection,
+  PaymentHistorySection,
+  ProgressSection,
+  CreditRatingSection,
+} from './components';
+import { DashboardData } from './types';
+import easyfundLogoSvg from '../../utils/img/easyfund-logo.svg';
+import profileImage from '../../utils/img/profile.png';
 import './Dashboard.css';
 
-interface LoanApplication {
-  id: string;
-  amount: number;
-  purpose: string;
-  status: string;
-  created_at: string;
-}
-
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const [applications, setApplications] = useState<LoanApplication[]>([]);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [payments, setPayments] = useState<{ date: string; amount: number; bank: string }[]>([]);
-  const [debtsByBank, setDebtsByBank] = useState<{ bank: string; amount: number }[]>([]);
-  const [overall, setOverall] = useState<{ totalDebt: number; totalPaid: number }>({ totalDebt: 0, totalPaid: 0 });
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fallback data
+  const defaultData: DashboardData = {
+    accountBalance: 214543,
+    totalDebt: 2314593,
+    creditCount: 2,
+    creditCardCount: 6,
+    progress: {
+      currentDebt: 1314593,
+      initialDebt: 2314593,
+      targetDebt: 0,
+      percentage: 43,
+    },
+    creditRating: {
+      score: 645,
+      min: 300,
+      max: 850,
+      labels: ['Низкий', 'Неплохой', 'Хороший', 'Отличный'],
+    },
+    payments: [
+      {
+        id: '1',
+        title: 'Кредитная карта Platinum',
+        dueDate: 'Ближайший платеж 14 октября',
+        amount: '3 554 ₽',
+      },
+      {
+        id: '2',
+        title: 'Кредитная карта Сбербанк',
+        dueDate: 'Ближайший платеж завтра',
+        amount: '12 456 ₽',
+      },
+      {
+        id: '3',
+        title: 'Кредит наличными ВТБ',
+        dueDate: 'Ближайший платеж сегодня',
+        amount: '7 345 ₽',
+      },
+      {
+        id: '4',
+        title: 'Кредит онлайн Альфа-Банк',
+        dueDate: 'Ближайший платеж 2 сентября',
+        amount: '145 554 ₽',
+      },
+      {
+        id: '5',
+        title: 'Денежная рассрочка от Т-Банк',
+        dueDate: 'Ближайший платеж 9 ноября',
+        amount: '2 100 ₽',
+      },
+      {
+        id: '6',
+        title: 'Кредит взаймы Сбербанк',
+        dueDate: 'Ближайший платеж послезавтра',
+        amount: '44 555 ₽',
+      },
+    ],
+    transactions: [
+      {
+        id: '1',
+        company: 'ООО "Автозаводская"',
+        title: 'Магазин у дома',
+        amount: '12 200 ₽',
+        isPositive: false,
+      },
+      {
+        id: '2',
+        company: 'ООО "Автозаводская"',
+        title: 'Магазин у дома',
+        amount: '12 200 ₽',
+        isPositive: false,
+      },
+      {
+        id: '3',
+        title: 'Зачисление ЗП',
+        amount: '+33 200 ₽',
+        isPositive: true,
+      },
+      {
+        id: '4',
+        title: 'Подписка Яндекс',
+        amount: '-399 ₽',
+        isPositive: false,
+      },
+      {
+        id: '5',
+        title: 'Подписка Яндекс',
+        amount: '-399 ₽',
+        isPositive: false,
+      },
+    ],
+    debtsByBank: [
+      { id: '1', bankName: 'ВТБ', amount: 213123, color: '#5218f4' },
+      { id: '2', bankName: 'Сбербанк', amount: 650000, color: '#d081e4' },
+      { id: '3', bankName: 'Альфа-Банк', amount: 180000, color: '#189CF4' },
+    ],
+  };
 
   useEffect(() => {
-    if (user) {
-      fetchApplications();
-      // NOTE: Backend endpoints for these analytics aren't present yet.
-      // Using lightweight mocked data so UI is functional.
-      seedDemoData();
-      fetchBanksForDemo();
-    }
-  }, [user]);
+    fetchDashboardData();
+  }, []);
 
-  const fetchApplications = async () => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  const fetchDashboardData = async () => {
     try {
-      const response = await loanApplicationsAPI.getAll();
-      setApplications(response.data);
+      // TODO: Replace with actual API call
+      // const response = await api.get('/dashboard');
+      // setDashboardData(response.data);
+      
+      // For now, use default data with a small delay to simulate API call
+      setTimeout(() => {
+        setDashboardData(defaultData);
+        setLoading(false);
+      }, 500);
     } catch (error) {
-      console.error('Error fetching applications:', error);
-    } finally {
+      console.error('Error fetching dashboard data:', error);
+      // Use fallback data on error
+      setDashboardData(defaultData);
       setLoading(false);
     }
   };
 
-  const fetchBanksForDemo = async () => {
-    try {
-      await banksAPI.getAll();
-      // If API exists, you could map real balances here. For now keep demo mix.
-    } catch {
-      // ignore
-    }
-  };
+  const userName = useMemo(() => {
+    return user?.name || user?.email?.split('@')[0] || 'Пользователь';
+  }, [user]);
 
-  const seedDemoData = () => {
-    const now = new Date();
-    const months = Array.from({ length: 12 }).map((_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
-      return d.toISOString().slice(0, 10);
-    });
-    const series = months.map((d, idx) => ({
-      date: d,
-      amount: 120 + Math.round(40 * Math.sin(idx / 2) + Math.random() * 30),
-      bank: ['Sberbank', 'VTB', 'Alfa-Bank'][idx % 3],
-    }));
-    setPayments(series);
-    setDebtsByBank([
-      { bank: 'Sberbank', amount: 650000 },
-      { bank: 'VTB', amount: 420000 },
-      { bank: 'T-Bank', amount: 180000 },
-      { bank: 'Alfa-Bank', amount: 90000 },
-    ]);
-    setOverall({ totalDebt: 1314593, totalPaid: 1314593 - 2314593 + 1000000 });
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      draft: 'var(--color-neutral-500)',
-      submitted: 'var(--color-info-500)',
-      under_review: 'var(--color-warning-500)',
-      approved: 'var(--color-success-500)',
-      rejected: 'var(--color-error-500)',
-      partially_approved: 'var(--color-secondary-500)',
-    };
-    return colors[status] || 'var(--color-neutral-500)';
-  };
-
-  const payoffPercent = useMemo(() => {
-    const { totalDebt, totalPaid } = overall;
-    if (totalDebt <= 0) return 0;
-    return Math.max(0, Math.min(100, Math.round((totalPaid / totalDebt) * 100)));
-  }, [overall]);
-
-  const totalDebtAmount = useMemo(() => debtsByBank.reduce((s, d) => s + d.amount, 0), [debtsByBank]);
-
-  const donutArcs = useMemo(() => {
-    const r = 56;
-    const c = 2 * Math.PI * r;
-    let acc = 0;
-    return debtsByBank.map((d) => {
-      const frac = totalDebtAmount ? d.amount / totalDebtAmount : 0;
-      const len = frac * c;
-      const dasharray = `${len} ${c - len}`;
-      const dashoffset = c - acc * c;
-      acc += frac;
-      return { bank: d.bank, dasharray, dashoffset };
-    });
-  }, [debtsByBank, totalDebtAmount]);
-
-  if (loading) {
+  if (loading || !dashboardData) {
     return (
-      <Layout user={user}>
-        <div className="dashboard__loading">Loading...</div>
-      </Layout>
+      <div className="dashboard dashboard--loading">
+        <div className="dashboard__loading-spinner">Загрузка...</div>
+      </div>
     );
   }
 
   return (
-    <Layout user={user}>
-      <div className="dashboard">
-        <div className="dashboard__header">
-          <h1 className="dashboard__title">Dashboard</h1>
-          <Link to="/applications/new">
-            <Button>New Application</Button>
-          </Link>
-        </div>
-
-        {/* Top KPIs */}
-        <div className="dashboard__stats">
-          <Card variant="elevated" className="dashboard__stat-card">
-            <h3 className="dashboard__stat-label">Overall Loan</h3>
-            <p className="dashboard__stat-value dashboard__stat-value--debt">
-              {totalDebtAmount.toLocaleString('ru-RU')} ₽
-            </p>
-          </Card>
-          <Card variant="elevated" className="dashboard__stat-card">
-            <h3 className="dashboard__stat-label">Paid</h3>
-            <p className="dashboard__stat-value">
-              {(overall.totalPaid || Math.round(totalDebtAmount * payoffPercent / 100)).toLocaleString('ru-RU')} ₽
-            </p>
-          </Card>
-          <Card variant="elevated" className="dashboard__stat-card">
-            <h3 className="dashboard__stat-label">Applications</h3>
-            <p className="dashboard__stat-value">{applications.length}</p>
-          </Card>
-        </div>
-
-        {/* Main grid */}
-        <div className="dashboard__grid">
-          {/* 1) Progress bar */}
-          <Card variant="outlined" className="dashboard__panel">
-            <h3 className="dashboard__panel-title">You are almost there!</h3>
-            <div className="dashboard__progress-wrap">
-              <div className="dashboard__progress">
-                <div className="dashboard__progress-bar" style={{ width: `${payoffPercent}%` }} />
-              </div>
-              <div className="dashboard__progress-meta">
-                <span>{payoffPercent}%</span>
-                <span>
-                  {totalDebtAmount.toLocaleString('ru-RU')} ₽ →{' '}
-                  {(totalDebtAmount - (overall.totalPaid || totalDebtAmount * payoffPercent / 100)).toLocaleString('ru-RU')} ₽ left
-                </span>
-              </div>
-            </div>
-          </Card>
-
-          {/* 2) History list */}
-          <Card variant="outlined" className="dashboard__panel">
-            <h3 className="dashboard__panel-title">Payment history</h3>
-            <ul className="dashboard__history">
-              {payments.slice(-7).reverse().map((p, i) => (
-                <li key={i} className="dashboard__history-item">
-                  <span className="dashboard__history-icon" />
-                  <div className="dashboard__history-info">
-                    <div className="dashboard__history-title">Payment to {p.bank}</div>
-                    <div className="dashboard__history-sub">
-                      {new Date(p.date).toLocaleDateString('ru-RU')}
-                    </div>
-                  </div>
-                  <div className="dashboard__history-amount">-{p.amount.toLocaleString('ru-RU')} ₽</div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          {/* 3) Donut chart */}
-          <Card variant="outlined" className="dashboard__panel">
-            <h3 className="dashboard__panel-title">Debt by bank</h3>
-            <div className="dashboard__donut">
-              <svg width="140" height="140" viewBox="0 0 140 140">
-                <g transform="translate(70,70)">
-                  <circle r="56" fill="none" stroke="var(--color-background-tertiary)" strokeWidth="16" />
-                  {donutArcs.map((arc, idx) => (
-                    <circle
-                      key={idx}
-                      r="56"
-                      fill="none"
-                      stroke={`var(--chart-${(idx % 6) + 1})`}
-                      strokeWidth="16"
-                      strokeDasharray={arc.dasharray}
-                      strokeDashoffset={arc.dashoffset}
-                      transform="rotate(-90)"
-                      strokeLinecap="round"
-                    />
-                  ))}
-                </g>
+    <div className="dashboard">
+      <div className="dashboard__container">
+        {/* Background */}
+        <div className="dashboard__background" />
+        
+        {/* Header */}
+        <header className="dashboard__header">
+          <button
+            className="dashboard__logo-link"
+            onClick={() => navigate('/dashboard')}
+            type="button"
+            aria-label="Go to dashboard"
+          >
+            <img
+              className="dashboard__logo"
+              alt="EasyFund Logo"
+              src={easyfundLogoSvg}
+            />
+          </button>
+          <div className="dashboard__header-actions">
+            <button className="dashboard__header-icon" type="button" aria-label="Search">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
-              <div className="dashboard__legend">
-                {debtsByBank.map((d, idx) => (
-                  <div key={d.bank} className="dashboard__legend-row">
-                    <span className="dashboard__legend-dot" style={{ background: `var(--chart-${(idx % 6) + 1})` }} />
-                    <span className="dashboard__legend-label">{d.bank}</span>
-                    <span className="dashboard__legend-value">{d.amount.toLocaleString('ru-RU')} ₽</span>
-                  </div>
-                ))}
-              </div>
+            </button>
+            <button className="dashboard__header-icon" type="button" aria-label="Notifications">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <div className="dashboard__avatar" ref={dropdownRef}>
+              <button
+                className="dashboard__avatar-button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                type="button"
+                aria-label="User menu"
+              >
+                <img
+                  className="dashboard__avatar-image"
+                  src={profileImage}
+                  alt={user?.name || 'User'}
+                />
+              </button>
+              {dropdownOpen && (
+                <div className="dashboard__dropdown">
+                  <button
+                    className="dashboard__dropdown-item"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      // TODO: Navigate to profile page when it's created
+                      // navigate('/profile');
+                      console.log('Navigate to profile');
+                    }}
+                    type="button"
+                  >
+                    Перейти в профиль
+                  </button>
+                  <button
+                    className="dashboard__dropdown-item"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      handleLogout();
+                    }}
+                    type="button"
+                  >
+                    Выйти
+                  </button>
+                </div>
+              )}
             </div>
-          </Card>
+          </div>
+        </header>
 
-          {/* 5) Line chart */}
-          <Card variant="outlined" className="dashboard__panel">
-            <h3 className="dashboard__panel-title">Monthly payments</h3>
-            <svg viewBox="0 0 500 160" className="dashboard__linechart">
-              <polyline
-                fill="url(#fill)"
-                stroke="var(--color-info-500)"
+      {/* Greeting */}
+      <h1 className="dashboard__greeting">Добрый день, {userName}!</h1>
+
+      {/* Sections */}
+      <CreditScoreSection
+        accountBalance={dashboardData.accountBalance}
+        onTransfer={() => console.log('Transfer clicked')}
+        onTopUp={() => console.log('Top up clicked')}
+      />
+
+      <PaymentHistorySection
+        totalDebt={dashboardData.totalDebt}
+        creditCount={dashboardData.creditCount}
+        creditCardCount={dashboardData.creditCardCount}
+        onViewAllProducts={() => navigate('/applications')}
+      />
+
+      <DebtOverviewSection
+        transactions={dashboardData.transactions}
+        onFilterChange={(filter) => console.log('Filter changed:', filter)}
+      />
+
+      <AccountSummarySection
+        payments={dashboardData.payments}
+        onViewAll={() => console.log('View all payments')}
+      />
+
+      <FinancialGoalsSection debtsByBank={dashboardData.debtsByBank} />
+
+      <ProgressSection progress={dashboardData.progress} />
+
+      <CreditRatingSection creditRating={dashboardData.creditRating} />
+
+        {/* Bottom Navigation */}
+        <nav className="dashboard__nav" aria-label="Main navigation">
+          <div className="dashboard__nav-indicator" />
+          <button
+            className="dashboard__nav-btn dashboard__nav-btn--active"
+            aria-label="Home"
+            onClick={() => navigate('/dashboard')}
+          >
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15"
+                stroke="#FFFFFF"
                 strokeWidth="2"
-                points={payments
-                  .map((p, i) => {
-                    const x = (i / Math.max(1, payments.length - 1)) * 500;
-                    const y = 140 - (p.amount / 200) * 120;
-                    return `${x},${Math.max(0, Math.min(140, y))}`;
-                  })
-                  .join(' ')}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
-              <defs>
-                <linearGradient id="fill" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-info-200)" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="var(--color-background)" stopOpacity="0" />
-                </linearGradient>
-              </defs>
             </svg>
-          </Card>
-
-          {/* 6) Scoring */}
-          <Card variant="outlined" className="dashboard__panel">
-            <h3 className="dashboard__panel-title">Predicted scoring</h3>
-            <div className="dashboard__score">
-              <div className="dashboard__score-value">742</div>
-              <div className="dashboard__score-meter">
-                <div className="dashboard__score-good" style={{ width: '70%' }} />
-              </div>
-              <div className="dashboard__score-scale">
-                <span>Poor</span><span>Fair</span><span>Good</span><span>Excellent</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* 7) Suggestions */}
-          <Card variant="outlined" className="dashboard__panel">
-            <h3 className="dashboard__panel-title">New offers</h3>
-            <ul className="dashboard__offers">
-              {['Credit card', 'Refinance loan', 'Cashback card', 'Low-rate loan'].map((t, i) => (
-                <li key={i} className="dashboard__offer-row">
-                  <div className="dashboard__offer-icon" />
-                  <div className="dashboard__offer-main">
-                    <div className="dashboard__offer-title">{t}</div>
-                    <div className="dashboard__offer-sub">Limit up to {(1000 + i * 250).toLocaleString('ru-RU')} ₽</div>
-                  </div>
-                  <Button size="sm">Details</Button>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </div>
-
-        {/* Recent applications keep at bottom */}
-        <div className="dashboard__applications">
-          <h2 className="dashboard__section-title">Recent Applications</h2>
-          {applications.length === 0 ? (
-            <Card variant="outlined" className="dashboard__empty">
-              <p>No applications yet. Create your first application!</p>
-              <Link to="/applications/new">
-                <Button style={{ marginTop: 'var(--spacing-md)' }}>
-                  Create Application
-                </Button>
-              </Link>
-            </Card>
-          ) : (
-            <div className="dashboard__app-list">
-              {applications.map((app) => (
-                <Card
-                  key={app.id}
-                  variant="outlined"
-                  className="dashboard__app-card"
-                  onClick={() => (window.location.href = `/applications/${app.id}`)}
-                >
-                  <div className="dashboard__app-header">
-                    <h3 className="dashboard__app-amount">${app.amount.toLocaleString()}</h3>
-                    <span className="dashboard__app-status" style={{ color: getStatusColor(app.status) }}>
-                      {app.status.replace('_', ' ').toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="dashboard__app-purpose">{app.purpose}</p>
-                  <p className="dashboard__app-date">Created: {new Date(app.created_at).toLocaleDateString()}</p>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+          </button>
+          <button
+            className="dashboard__nav-btn"
+            aria-label="Applications"
+            onClick={() => navigate('/applications')}
+          >
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z"
+                stroke="#082131"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </nav>
       </div>
-    </Layout>
+    </div>
   );
 };
-

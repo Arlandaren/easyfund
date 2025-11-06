@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Layout, Button, Input, Card } from '../../components';
+import { useNavigate } from 'react-router-dom';
+import { Button, Input } from '../../components';
 import { useAuth } from '../../context/AuthContext';
+import gosuslugiLogo from '../../utils/img/gosuslugi-logo.png';
+import easyfundLogo from '../../utils/img/easyfund-logo.png';
 import './Login.css';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: 'admin@easyfund.com',
-    password: 'admin123',
-    role: 'borrower' as 'borrower' | 'bank_employee',
+    email: 'yanavtb@ya.ru',
+    password: '',
+    role: 'client' as 'client' | 'bank_employee',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ export const Login: React.FC = () => {
     });
   };
 
-  const handleRoleChange = (role: 'borrower' | 'bank_employee') => {
+  const handleRoleChange = (role: 'client' | 'bank_employee') => {
     setFormData({
       ...formData,
       role,
@@ -35,115 +37,123 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      // Mock authentication for testing - bypass backend
       await login(formData.email, formData.password);
-      navigate('/dashboard');
+      navigate('/welcome');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError(err.response?.data?.message || 'Неверный email или пароль');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Layout>
-      <div className="login">
-        <div className="login__container">
-          <div className="login__left">
-            <h2 className="login__title">
-              Начни <span className="login__title-highlight">управлять</span> счетами
-            </h2>
+    <div className="login-page">
+      {/* Background decorative element */}
+      <div className="login-page__background"></div>
+      
+      {/* Main content card */}
+      <div className="login-page__card">
+        <h1 className="login-page__title">
+          Начни <span className="login-page__title-highlight">управлять счетами</span>
+        </h1>
 
-            <form onSubmit={handleSubmit} className="login__form">
-              <Input
-                type="email"
-                name="email"
-                label="Почта"
-                placeholder="yanavtb@ya.ru"
-                value={formData.email}
-                onChange={handleChange}
-                className="login__input"
-                fullWidth
-              />
-
-              <Input
-                type="password"
-                name="password"
-                label="Пароль"
-                placeholder="************"
-                value={formData.password}
-                onChange={handleChange}
-                className="login__input"
-                fullWidth
-              />
-
-              {error && <div className="login__error">{error}</div>}
-
-              <Button
-                type="submit"
-                fullWidth
-                isLoading={loading}
-                size="lg"
-                className="login__submit-btn"
-              >
-                Войти
-              </Button>
-            </form>
-
-            <button className="login__gosuslugi-btn">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#E01E5A"/>
-                <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="#06B6D4"/>
-                <path d="M22 12L12 17L2 12L12 7L22 12Z" fill="#C2EFF3"/>
-              </svg>
-              Госуслуги
-            </button>
-
-            <p className="login__helper-text">
-              Или войдите с помощью
-            </p>
+        {/* Role selection */}
+        <div className="login-page__roles">
+          <div
+            className={`login-page__role-card ${formData.role === 'client' ? 'login-page__role-card--selected' : ''}`}
+            onClick={() => handleRoleChange('client')}
+          >
+            <div className="login-page__role-radio">
+              {formData.role === 'client' && <div className="login-page__role-radio-inner"></div>}
+            </div>
+            <div className="login-page__role-content">
+              <h3 className="login-page__role-title">Я клиент банка</h3>
+              <p className="login-page__role-description">
+                Возможность управлять своими финансами в нашем сервисе. Использование кредитных продуктов.
+              </p>
+            </div>
           </div>
 
-          <div className="login__right">
-            <div
-              className={`login__role-card ${formData.role === 'borrower' ? 'login__role-card--selected' : ''}`}
-              onClick={() => handleRoleChange('borrower')}
-            >
-              <div className="login__role-radio">
-                {formData.role === 'borrower' && <div className="login__role-radio-inner"></div>}
-              </div>
-              <div className="login__role-content">
-                <h3 className="login__role-title">Я клиент банка</h3>
-                <p className="login__role-description">
-                  Возможность управлять своими финансами в 1 сервисе. Использование кредитных продуктов и многое другое.
-                </p>
-              </div>
+          <div
+            className={`login-page__role-card ${formData.role === 'bank_employee' ? 'login-page__role-card--selected' : ''}`}
+            onClick={() => handleRoleChange('bank_employee')}
+          >
+            <div className="login-page__role-radio">
+              {formData.role === 'bank_employee' && <div className="login-page__role-radio-inner"></div>}
             </div>
-
-            <div
-              className={`login__role-card ${formData.role === 'bank_employee' ? 'login__role-card--selected' : ''}`}
-              onClick={() => handleRoleChange('bank_employee')}
-            >
-              <div className="login__role-radio">
-                {formData.role === 'bank_employee' && <div className="login__role-radio-inner"></div>}
-              </div>
-              <div className="login__role-content">
-                <h3 className="login__role-title">Я сотрудник банка</h3>
-                <p className="login__role-description">
-                  Возможность управлять своими финансами в 1 сервисе. Использование кредитных продуктов и многое другое.
-                </p>
-              </div>
+            <div className="login-page__role-content">
+              <h3 className="login-page__role-title">Я сотрудник банка</h3>
+              <p className="login-page__role-description">
+                Возможность управлять своими финансами в нашем сервисе. Использование кредитных продуктов.
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="login__info">
-          <p className="login__test-info">
-            Test Account: admin@easyfund.com / admin123
-          </p>
+        {/* Login form */}
+        <form onSubmit={handleSubmit} className="login-page__form">
+          <Input
+            type="email"
+            name="email"
+            label="Почта"
+            placeholder="yanavtb@ya.ru"
+            value={formData.email}
+            onChange={handleChange}
+            className="login-page__input"
+            fullWidth
+          />
+
+          <Input
+            type="password"
+            name="password"
+            label="Пароль"
+            placeholder="Введите пароль"
+            value={formData.password}
+            onChange={handleChange}
+            className="login-page__input"
+            fullWidth
+            autoComplete="current-password"
+          />
+
+          {error && <div className="login-page__error">{error}</div>}
+
+          <Button
+            type="submit"
+            fullWidth
+            isLoading={loading}
+            size="lg"
+            className="login-page__submit-btn"
+          >
+            Войти
+          </Button>
+        </form>
+
+        {/* Social login */}
+        <div className="login-page__social">
+          <p className="login-page__social-text">Или войдите с помощью</p>
+          <div className="login-page__social-buttons">
+            {[1, 2, 3, 4].map((i) => (
+              <button
+                key={i}
+                type="button"
+                className="login-page__gosuslugi-btn"
+                onClick={() => {
+                  // Handle Gosuslugi login
+                  console.log('Gosuslugi login clicked');
+                }}
+              >
+                <img src={gosuslugiLogo} alt="Госуслуги" className="login-page__gosuslugi-logo" />
+                <span>Госуслуги</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </Layout>
+
+      {/* Footer logo */}
+      <div className="login-page__footer">
+        <img src={easyfundLogo} alt="EasyFund" className="login-page__footer-logo" />
+      </div>
+    </div>
   );
 };
-

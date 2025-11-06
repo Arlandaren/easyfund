@@ -1,0 +1,103 @@
+.credit-rating-section {
+  position: absolute;
+  top: 719px;
+  left: 532px;
+  width: 512px;
+  height: 166px;
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0px 4px 24px rgba(24, 156, 244, 0.05);
+  padding: 24px 32px;
+}
+
+.credit-rating-section__title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #082131;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.credit-rating-section__score {
+  position: absolute;
+  top: 52px;
+  right: 32px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #DB1414;
+  line-height: 1.2;
+}
+
+.credit-rating-section__slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 459px;
+  margin-top: 28px;
+}
+
+.credit-rating-section__slider {
+  position: relative;
+  width: 458px;
+  height: 10px;
+}
+
+.credit-rating-section__slider-track {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 458px;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    #DB1414 0%,
+    #f59e0b 33%,
+    #22c55e 66%,
+    #0ea5e9 100%
+  );
+  border-radius: 2px;
+}
+
+.credit-rating-section__slider-indicator {
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #DB1414;
+  border: 2px solid #FFFFFF;
+  border-radius: 5px;
+  transform: translateX(-50%);
+  transition: left 0.3s ease;
+}
+
+.credit-rating-section__labels {
+  display: flex;
+  align-items: center;
+  gap: 79px;
+  width: 100%;
+}
+
+.credit-rating-section__label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #C2C2C2;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.credit-rating-section__description {
+  position: absolute;
+  bottom: 24px;
+  left: 32px;
+  right: 32px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #C2C2C2;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+

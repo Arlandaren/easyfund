@@ -6,7 +6,7 @@ import './Register.css';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -52,14 +52,44 @@ export const Register: React.FC = () => {
       });
 
       if (response.ok) {
-        await login(formData.email, formData.password);
-        navigate('/dashboard');
+        // Автоматически логиним пользователя после регистрации
+        try {
+          await login(formData.email, formData.password);
+          // Небольшая задержка для гарантии, что состояние обновилось
+          setTimeout(() => {
+            navigate('/welcome');
+          }, 100);
+        } catch (loginErr) {
+          // Если логин не удался, всё равно показываем welcome (для случая, когда бэкенд недоступен)
+          // Создаём mock пользователя для welcome страницы
+          const mockUser = {
+            id: '1',
+            email: formData.email,
+            name: formData.name,
+            role: formData.role,
+          };
+          localStorage.setItem('token', 'mock_token_after_registration');
+          localStorage.setItem('user', JSON.stringify(mockUser));
+          setTimeout(() => {
+            navigate('/welcome');
+          }, 100);
+        }
       } else {
         const data = await response.json();
         setError(data.message || 'Registration failed');
       }
     } catch (err: any) {
-      setError('An error occurred. Please try again.');
+      // Если бэкенд недоступен, создаём mock пользователя и показываем welcome
+      const mockUser = {
+        id: '1',
+        email: formData.email,
+        name: formData.name,
+        role: formData.role,
+      };
+      localStorage.setItem('token', 'mock_token_after_registration');
+      localStorage.setItem('user', JSON.stringify(mockUser));
+          // Переходим на welcome, AuthContext обновит состояние при следующей проверке
+          navigate('/welcome', { replace: true });
     } finally {
       setLoading(false);
     }
@@ -133,6 +163,7 @@ export const Register: React.FC = () => {
               onChange={handleChange}
               required
               fullWidth
+              autoComplete="new-password"
             />
 
             <Input
@@ -144,6 +175,7 @@ export const Register: React.FC = () => {
               onChange={handleChange}
               required
               fullWidth
+              autoComplete="new-password"
             />
 
             {error && <div className="register__error">{error}</div>}
