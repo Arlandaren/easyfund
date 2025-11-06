@@ -8,9 +8,9 @@ on:
       - '.github/workflows/deploy-frontend.yml'
 
 env:
-  DEPLOY_PATH: /var/www/easyfund-frontend
-  SERVER_DOMAIN: your-domain.com
-  SERVER_USER: user
+  DEPLOY_PATH: /home/easyfund/frontend
+  SERVER_DOMAIN: 147.45.147.73
+  SERVER_USER: root
 
 jobs:
   deploy_frontend:
@@ -32,39 +32,73 @@ jobs:
       - name: Build frontend
         run: cd frontend && npm run build
 
-      - name: Create production files
-        run: |
-          cd frontend
-          mkdir -p deploy
-          cp -r dist/* deploy/
-          cp nginx.conf deploy/
-          # Создаем docker-compose для фронтенда
-          cat > deploy/docker-compose.yml << EOF
-          version: '3.8'
-          services:
-            frontend:
-              image: nginx:alpine
-              container_name: easyfund-frontend
-              ports:
-                - "3000:80"
-              volumes:
-                - ./:/usr/share/nginx/html
-                - ./nginx.conf:/etc/nginx/conf.d/default.conf
-              restart: unless-stopped
-          EOF
+        # Установка Docker Buildx и логин в Docker Hub
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Setup SSH
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # Сборка Docker-образа
+      - name: Build Docker image
+        run: docker compose --env-file=.env build
+
+      # Сохранение Docker-образа в tar-файл
+      - name: Save Docker image
+        run: docker save -o image.tar app:latest
+
+      # Настройка SSH
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY_BASE64 }}" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ env.SERVER_DOMAIN }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to server
+      # Создание директории на сервере
+      - name: Create remote directory
         run: |
-          scp -r frontend/deploy/* ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }}:${{ env.DEPLOY_PATH }}/
-          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} "
-            cd ${{ env.DEPLOY_PATH }}
-            docker-compose down
-            docker-compose up -d
+          ssh -o StrictHostKeyChecking=no \
+            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} \
+            "mkdir -p ${{ env.DEPLOY_PATH }}"
+
+      # Установка rsync
+      - name: Install rsync
+        run: sudo apt-get update && sudo apt-get install -y rsync
+
+      # Синхронизация файлов
+      - name: Sync files to server
+        run: |
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='backend/' \
+            --exclude='frontend/node_modules/' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }}:${{ env.DEPLOY_PATH }}/
+
+      # Запуск контейнеров на сервере
+      - name: Load Docker image and start containers
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} -p 22 "
+            if ! command -v docker &> /dev/null; then
+              echo 'Docker is not installed!'
+              exit 1
+            fi
+            cd $DEPLOY_PATH
+            docker load -i image.tar || { echo 'Failed to load Docker image'; exit 1; }
+            docker compose --env-file=.env up -d --force-recreate || { echo 'Failed to start containers'; exit 1; }
+            echo 'Deployed!'
+          "
+
+      - name: Post-deploy cleanup
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} "
+            docker system prune -a -f      # Удаляем оставшийся мусор
+            rm -f image.tar
           "
