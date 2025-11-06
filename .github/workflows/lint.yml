@@ -3,10 +3,10 @@ name: Lint Go
 on:
   push:
     branches:
-      - main
+      - asdads
   pull_request:
     branches:
-      - main
+      - asdadsasadsdas
 
 jobs:
   golangci-lint:
