@@ -12,9 +12,6 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Пропускаем проверку TypeScript для билда
-RUN npx tsc --skipLibCheck --noEmit || true
-
 # Build the application
 RUN npm run build
 
