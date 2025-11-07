@@ -76,9 +76,10 @@ jobs:
               echo 'Docker is not installed!'
               exit 1
             fi
-            cd $DEPLOY_PATH
+            cd ${{ env.DEPLOY_PATH }}
             docker load -i image.tar || { echo 'Failed to load Docker image'; exit 1; }
-            docker compose --env-file=.env up -d --force-recreate || { echo 'Failed to start containers'; exit 1; }
+            cd frontend
+            docker compose -f docker-compose.yml up -d --force-recreate || { echo 'Failed to start containers'; exit 1; }
             echo 'Deployed!'
           "
 
