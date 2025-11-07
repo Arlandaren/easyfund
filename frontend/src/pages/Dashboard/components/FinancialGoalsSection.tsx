@@ -12,7 +12,8 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
   // Calculate total debt and percentages for each bank
   const { chartData, percentages } = useMemo(() => {
     // 1. Calculate total sum of all debts
-    const total = debtsByBank.reduce((sum, debt) => sum + debt.amount, 0);
+    const totalDebt = debtsByBank.reduce((sum, debt) => sum + debt.amount, 0);
+    const total = totalDebt;
     if (total === 0) {
       return {
         chartData: [],
@@ -86,7 +87,6 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
         ...debt,
         pathData,
         percentage,
-        segmentAngle,
       };
     });
 
