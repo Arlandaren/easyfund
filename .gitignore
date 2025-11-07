@@ -26,6 +26,13 @@ config.yaml
 secrets/
 
 # Docker и Makefile
+# Разрешаем Dockerfile в frontend и backend директориях
+!frontend/Dockerfile
+!frontend/.dockerignore
+!backend/Dockerfile
+!backend/.dockerignore
+.dockerignore
+Dockerfile*
 .docker/
 Makefile.local
 

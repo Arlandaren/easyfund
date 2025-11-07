@@ -10,12 +10,12 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
   debtsByBank,
 }) => {
   // Calculate total debt and percentages for each bank
-  const { totalDebt, chartData, percentages } = useMemo(() => {
+  const { chartData, percentages } = useMemo(() => {
     // 1. Calculate total sum of all debts
-    const total = debtsByBank.reduce((sum, debt) => sum + debt.amount, 0);
+    const totalDebt = debtsByBank.reduce((sum, debt) => sum + debt.amount, 0);
+    const total = totalDebt;
     if (total === 0) {
       return {
-        totalDebt: 0,
         chartData: [],
         percentages: new Map<string, number>(),
       };
@@ -42,7 +42,7 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
     
     let currentAngle = -90; // Start from top (in degrees)
 
-    const chartSegments = debtsByBank.map((debt, index) => {
+    const chartSegments = debtsByBank.map((debt) => {
       // Get percentage for this segment
       const percentage = percentagesMap.get(debt.id) || 0;
       
@@ -80,9 +80,6 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
         'Z', // Close path back to start
       ].join(' ');
 
-      // Store start angle for reference
-      const startAngle = currentAngle;
-      
       // Move to next segment position: current angle + segment angle + gap
       currentAngle += segmentAngle + gapDegrees;
 
@@ -90,12 +87,10 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
         ...debt,
         pathData,
         percentage,
-        segmentAngle,
       };
     });
 
     return {
-      totalDebt: total,
       chartData: chartSegments,
       percentages: percentagesMap,
     };

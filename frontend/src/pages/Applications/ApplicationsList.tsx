@@ -75,14 +75,14 @@ export const ApplicationsList: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout user={user}>
+      <Layout user={user ? { name: user.name, email: user.email, role: user.role } : undefined}>
         <div className="applications__loading">Loading...</div>
       </Layout>
     );
   }
 
   return (
-    <Layout user={user}>
+    <Layout user={user ? { name: user.name, email: user.email, role: user.role } : undefined}>
       <div className="applications">
         <div className="applications__header">
           <h1 className="applications__title">Loan Applications</h1>
