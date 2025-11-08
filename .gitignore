@@ -22,6 +22,8 @@ vendor/
 # Секреты и конфиги
 .env
 .env.local
+*.env
+*.env.*
 config.yaml
 secrets/
 
@@ -29,10 +31,8 @@ secrets/
 # Разрешаем Dockerfile в frontend и backend директориях
 !frontend/Dockerfile
 !frontend/.dockerignore
-!backend/Dockerfile
 !backend/.dockerignore
 .dockerignore
-Dockerfile*
 .docker/
 Makefile.local
 
