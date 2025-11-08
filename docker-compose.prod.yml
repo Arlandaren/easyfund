@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  postgres:
+    ports: []
+    env_file:
+      - ./api/.env.prod
+
+  migrate:
+    env_file:
+      - ./api/.env.prod
+    volumes:
+      - ./secrets/ca.crt:/certs/ca.crt:ro
+      # Раскомментировать для mTLS:
+      # - ./secrets/client.crt:/certs/client.crt:ro
+      # - ./secrets/client.key:/certs/client.key:ro
+    command:
+      - -path=/migrations
+      - -database=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME}?sslmode=${DB_SSLMODE:-verify-full}&sslrootcert=/certs/ca.crt
+      - up
+
+  backend:
+    env_file:
+      - ./api/.env.prod
+    volumes:
+      - ./secrets/ca.crt:/certs/ca.crt:ro
+      # Раскомментировать для mTLS:
+      # - ./secrets/client.crt:/certs/client.crt:ro
+      # - ./secrets/client.key:/certs/client.key:ro
+    ports:
+      - "${APP_PUBLISH:-}:${PORT:-8080}:8080"

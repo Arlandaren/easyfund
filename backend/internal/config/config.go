@@ -1,35 +1,43 @@
 package config
 
-import (
-	"github.com/joho/godotenv"
-	"os"
-)
+import "time"
+
+type Environment string
 
 type Config struct {
-	PostgresURL  string
-	RedisAddr    string
-	RedisPass    string
-	GRPCAddress  string
-	HTTPAddress  string
-	JWTSecret    string
+	Env      Environment
+	Server   ServerConfig
+	Database DBConfig
+	JWT      JWTConfig
+	Logger   LoggerConfig
+	CORS     CORSConfig
 }
 
-func Load() (*Config, error) {
-	_ = godotenv.Load()
-
-	return &Config{
-		PostgresURL: getEnv("PG_STRING", "postgresql://easyfund:easyfund123@localhost:5434/easyfund_db?sslmode=disable"),
-		RedisAddr:   getEnv("REDIS_ADDRESS", "localhost:6378"),
-		RedisPass:   getEnv("REDIS_PASSWORD", "redis123"),
-		GRPCAddress: getEnv("GRPC_ADDRESS", ":9000"),
-		HTTPAddress: getEnv("HTTP_ADDRESS", ":8080"),
-		JWTSecret:   getEnv("JWT_SECRET", "your-super-secret-jwt-key"),
-	}, nil
+type ServerConfig struct {
+	Port string
+	Host string
 }
 
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
+type DBConfig struct {
+	Host        string
+	Port        string
+	User        string
+	Password    string
+	DBName      string
+	SSLMode     string
+	MaxConns    int // максимум соединений в пуле
+}
+
+type JWTConfig struct {
+	Secret string
+	Expiry time.Duration
+}
+
+type LoggerConfig struct {
+	Level string // "debug", "info", "warn", "error"
+	File  string // путь к логу
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string
 }
