@@ -1,0 +1,583 @@
+openapi: 3.0.3
+info:
+  title: Easyfund API
+  version: "1.0"
+  description: |
+    REST API для аутентификации, пользователей, счетов, транзакций, кредитов и кредитных заявок.
+    По умолчанию используется сервер http://localhost:8080/api/v1. При необходимости поменяйте URL/порт.
+servers:
+  - url: http://localhost:8080/api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        full_name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    AuthLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+
+    AuthRegisterRequest:
+      type: object
+      required: [full_name, email, phone, password]
+      properties:
+        full_name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        password: { type: string, format: password }
+
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        user:
+          $ref: '#/components/schemas/User'
+        expires_in: { type: integer, example: 86400 }
+
+    UserBankAccount:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        bank_id: { type: integer, format: int32 }
+        balance: { type: string, example: "12345.67" }
+        currency: { type: string, example: "RUB" }
+        created_at: { type: string, format: date-time }
+
+    BalanceSummary:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        total_balance: { type: string, example: "98765.43" }
+        currency: { type: string, example: "RUB" }
+        by_bank:
+          type: array
+          items:
+            type: object
+            properties:
+              bank_id: { type: integer }
+              balance: { type: string }
+
+    Transaction:
+      type: object
+      properties:
+        transaction_id: { type: integer, format: int64 }
+        user_id: { type: string, format: uuid }
+        bank_id: { type: integer, format: int32 }
+        occurred_at: { type: string, format: date-time }
+        amount: { type: string, example: "-1234.50" }
+        category: { type: string, example: "groceries" }
+        description: { type: string }
+
+    Loan:
+      type: object
+      properties:
+        loan_id: { type: string }  # uuid или serial по вашей схеме
+        user_id: { type: string, format: uuid }
+        amount: { type: string, example: "200000.00" }
+        rate: { type: string, example: "14.90" }
+        months: { type: integer, example: 24 }
+        status: { type: string, example: "active" }
+        created_at: { type: string, format: date-time }
+
+    LoanPayment:
+      type: object
+      properties:
+        payment_id: { type: string, nullable: true } # если есть явный PK
+        loan_id: { type: string }
+        amount: { type: string, example: "10000.00" }
+        paid_at: { type: string, format: date-time }
+        method: { type: string, example: "card" }
+        status: { type: string, example: "posted" }
+
+    Application:
+      type: object
+      properties:
+        application_id: { type: string }
+        user_id: { type: string, format: uuid }
+        amount: { type: string, example: "150000.00" }
+        term_months: { type: integer, example: 24 }
+        purpose: { type: string, example: "Demo application" }
+        status: { type: string, example: "pending" }
+        created_at: { type: string, format: date-time }
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Вход по email/паролю
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthLoginRequest' }
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400': { description: Неверный формат запроса }
+        '401': { description: Неверные учетные данные }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthRegisterRequest' }
+      responses:
+        '201':
+          description: Пользователь создан, возвращён токен
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400': { description: Ошибка валидации }
+        '409': { description: Email уже используется }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Текущий пользователь
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Профиль текущего пользователя
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { description: Требуется аутентификация }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Обновить токен
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Новый токен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  expires_in: { type: integer, example: 86400 }
+        '401': { description: Требуется аутентификация }
+
+  /users/random:
+    get:
+      tags: [Users]
+      summary: Случайный демо-пользователь
+      description: В DEV может возвращать demo_password
+      responses:
+        '200':
+          description: Пример пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id: { type: string, nullable: true }
+                  full_name: { type: string }
+                  email: { type: string }
+                  demo_password: { type: string, nullable: true }
+
+  /users/{user_id}:
+    get:
+      tags: [Users]
+      summary: Получить пользователя по ID
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Пользователь
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { description: Не авторизован }
+        '404': { description: Не найден }
+
+  /users/{user_id}/accounts:
+    get:
+      tags: [Accounts]
+      summary: Счета пользователя по банкам
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Массив счетов
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/UserBankAccount' }
+        '401': { description: Не авторизован }
+
+  /users/{user_id}/balance:
+    get:
+      tags: [Accounts]
+      summary: Агрегированный баланс пользователя
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Сводный баланс
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BalanceSummary' }
+        '401': { description: Не авторизован }
+
+  /users/{user_id}/transactions:
+    get:
+      tags: [Transactions]
+      summary: Транзакции пользователя
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: bank_id
+          required: false
+          schema: { type: integer }
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: category
+          schema: { type: string }
+      responses:
+        '200':
+          description: Массив транзакций
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Transaction' }
+        '401': { description: Не авторизован }
+
+  /users/{user_id}/banks/{bank_id}/transactions:
+    get:
+      tags: [Transactions]
+      summary: Транзакции пользователя в банке
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: bank_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Массив транзакций
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Transaction' }
+        '401': { description: Не авторизован }
+
+  /users/{user_id}/loans:
+    get:
+      tags: [Loans]
+      summary: Кредиты пользователя
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Массив кредитов
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Loan' }
+        '401': { description: Не авторизован }
+
+  /loans:
+    post:
+      tags: [Loans]
+      summary: Создать кредит
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, amount, rate, months]
+              properties:
+                user_id: { type: string, format: uuid }
+                amount: { type: number, format: float }
+                rate: { type: number, format: float }
+                months: { type: integer }
+      responses:
+        '201':
+          description: Кредит создан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Loan' }
+        '400': { description: Ошибка валидации }
+        '401': { description: Не авторизован }
+
+  /loans/{loan_id}:
+    get:
+      tags: [Loans]
+      summary: Детали кредита
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: loan_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Кредит (возможно с платежами)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Loan'
+                  - type: object
+                    properties:
+                      payments:
+                        type: array
+                        items: { $ref: '#/components/schemas/LoanPayment' }
+        '401': { description: Не авторизован }
+        '404': { description: Не найден }
+
+  /loans/{loan_id}/payment:
+    post:
+      tags: [Loans]
+      summary: Внести платёж по кредиту
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: loan_id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, method]
+              properties:
+                amount: { type: number, format: float }
+                method: { type: string, example: "card" }
+      responses:
+        '201':
+          description: Платёж проведён
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoanPayment' }
+        '400': { description: Ошибка валидации }
+        '401': { description: Не авторизован }
+        '404': { description: Кредит не найден }
+
+  /users/{user_id}/debt:
+    get:
+      tags: [Loans]
+      summary: Суммарная задолженность пользователя
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Итоговый долг
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id: { type: string, format: uuid }
+                  total_debt: { type: string, example: "180000.00" }
+                  by_loan:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        loan_id: { type: string }
+                        outstanding: { type: string }
+        '401': { description: Не авторизован }
+
+  /applications:
+    get:
+      tags: [Applications]
+      summary: (Опционально) список всех заявок (для админов)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Массив заявок
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Application' }
+    post:
+      tags: [Applications]
+      summary: Создать кредитную заявку
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, amount, term_months, purpose]
+              properties:
+                user_id: { type: string, format: uuid }
+                amount: { type: number, format: float }
+                term_months: { type: integer }
+                purpose: { type: string }
+      responses:
+        '201':
+          description: Заявка создана
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Application' }
+        '400': { description: Ошибка валидации }
+        '401': { description: Не авторизован }
+
+  /users/{user_id}/applications:
+    get:
+      tags: [Applications]
+      summary: Заявки пользователя
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Массив заявок пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Application' }
+        '401': { description: Не авторизован }
+
+  /applications/{application_id}/approve:
+    post:
+      tags: [Applications]
+      summary: Одобрить заявку
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: application_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Заявка одобрена
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Application' }
+        '401': { description: Не авторизован }
+        '404': { description: Не найдено }
+
+  /applications/{application_id}/reject:
+    post:
+      tags: [Applications]
+      summary: Отклонить заявку
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: application_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Заявка отклонена
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Application' }
+        '401': { description: Не авторизован }
+        '404': { description: Не найдено }
+
+  /banks:
+    get:
+      tags: [Reference]
+      summary: Справочник банков
+      responses:
+        '200':
+          description: Массив банков
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    bank_id: { type: integer }
+                    name: { type: string }
+
+  /health:
+    get:
+      tags: [Reference]
+      summary: Проверка состояния сервиса
+      responses:
+        '200':
+          description: Статус
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  uptime: { type: string }
+                  version: { type: string }

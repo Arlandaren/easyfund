@@ -23,7 +23,7 @@ vendor/
 .env
 .env.local
 *.env
-*.env.*
+*.env.prod
 config.yaml
 secrets/
 
