@@ -1,7 +1,7 @@
 // Types for Dashboard data
 
 export interface PaymentItem {
-  id: number; // Изменено с string на number
+  id: number;
   icon?: string;
   title: string;
   dueDate: string;
@@ -10,7 +10,7 @@ export interface PaymentItem {
 }
 
 export interface Transaction {
-  id: number; // Изменено с string на number
+  id: number;
   image?: string;
   company?: string;
   title: string;
@@ -19,7 +19,7 @@ export interface Transaction {
 }
 
 export interface DebtItem {
-  id: number; // Изменено с string на number
+  id: number;
   bankName: string;
   amount: number;
   color: string;
@@ -63,3 +63,65 @@ export interface DashboardData {
   // Debts by bank
   debtsByBank: DebtItem[];
 }
+
+// API Response types based on OpenAPI schema
+export interface ApiUser {
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BalanceSummary {
+  user_id: string;
+  total_balance: string;
+  currency: string;
+  by_bank: Array<{
+    bank_id: number;
+    balance: string;
+  }>;
+}
+
+export interface ApiTransaction {
+  transaction_id: number;
+  user_id: string;
+  bank_id: number;
+  occurred_at: string;
+  amount: string;
+  category: string;
+  description: string;
+}
+
+export interface ApiLoan {
+  loan_id: string;
+  user_id: string;
+  amount: string;
+  rate: string;
+  months: number;
+  status: string;
+  created_at: string;
+}
+
+export interface UserDebt {
+  user_id: string;
+  total_debt: string;
+  by_loan: Array<{
+    loan_id: string;
+    outstanding: string;
+  }>;
+}
+
+export interface ApiApplication {
+  application_id: string;
+  user_id: string;
+  amount: string;
+  term_months: number;
+  purpose: string;
+  status: string;
+  created_at: string;
+}
+
+// Export User type for use in other components
+export type { User } from '../../context/AuthContext';

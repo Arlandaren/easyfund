@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI } from '../utils/api';
 
-// Updated User interface based on your API schema
-interface User {
+// Updated User interface based on your API schema - ЭКСПОРТИРУЕМ тип
+export interface User {
   user_id: string;
   email: string;
   full_name: string;
