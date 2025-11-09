@@ -1,0 +1,158 @@
+.topbar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
+}
+
+.topbar--static {
+  position: relative;
+  padding-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.topbar--overlay {
+  position: absolute;
+  top: 19px;
+  left: 0;
+}
+
+.topbar__container {
+  width: 1355px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar__logo-button {
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.topbar__logo-button:hover {
+  transform: scale(1.05);
+}
+
+.topbar__logo {
+  width: 193px;
+  height: 60px;
+  object-fit: contain;
+  display: block;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.topbar__icon {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #082131;
+  transition: background-color 0.2s ease;
+  padding: 0;
+  box-shadow: 0 8px 16px rgba(24, 156, 244, 0.1);
+}
+
+.topbar__icon:hover {
+  background-color: #f3f4f6;
+}
+
+.topbar__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.topbar__avatar {
+  position: relative;
+}
+
+.topbar__avatar-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+  box-shadow: 0 8px 16px rgba(24, 156, 244, 0.12);
+}
+
+.topbar__avatar-button:hover {
+  transform: scale(1.05);
+}
+
+.topbar__avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.topbar__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 24px rgba(24, 156, 244, 0.15);
+  min-width: 180px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.topbar__dropdown-item {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #082131;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.topbar__dropdown-item:hover {
+  background-color: #f9fbfd;
+}
+
+.topbar__dropdown-item + .topbar__dropdown-item {
+  border-top: 1px solid #e5e5e5;
+}
+
+@media (max-width: 1440px) {
+  .topbar__container {
+    width: calc(100% - 80px);
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar__container {
+    width: calc(100% - 40px);
+  }
+
+  .topbar__logo {
+    width: 150px;
+    height: auto;
+  }
+}
+
+
