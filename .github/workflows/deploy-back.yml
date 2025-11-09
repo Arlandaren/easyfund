@@ -84,6 +84,7 @@ jobs:
       - name: Build Docker image
         run: docker compose -f backend/docker-compose.prod.yml --env-file=backend/.env.prod build
 
+
       # Сохранение Docker-образа в tar-файл
       - name: Save Docker image
         run: docker save -o image.tar app:latest
@@ -124,9 +125,16 @@ jobs:
           ssh -o StrictHostKeyChecking=no \
             ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} -p 22 "
             cd $DEPLOY_PATH
+<<<<<<< HEAD
             docker load -i image.tar
             # Теперь .env.prod внутри папки backend
             docker compose -f backend/docker-compose.prod.yml --env-file=backend/.env.prod up -d --force-recreate
+=======
+            ls
+            docker load -i image.tar || { echo 'Failed to load Docker image'; exit 1; }
+            docker compose -f backend/docker-compose.prod.yml --env-file=.env.prod up -d --force-recreate || { echo 'Failed to start containers'; exit 1; }
+            echo 'Deployed!'
+>>>>>>> refs/rewritten/main
           "
 
       - name: Post-deploy cleanup
