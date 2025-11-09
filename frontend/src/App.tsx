@@ -8,7 +8,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Welcome } from './pages/Welcome';
 import { Dashboard } from './pages/Dashboard';
-import { ApplicationsList } from './pages/Applications';
+import { ApplicationsList, NewApplication } from './pages/Applications';
 
 // Import base styles
 import './styles/base.css';
@@ -58,6 +58,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ApplicationsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/applications/new"
+            element={
+              <ProtectedRoute>
+                <NewApplication />
               </ProtectedRoute>
             }
           />
