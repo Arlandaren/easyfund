@@ -82,7 +82,7 @@ jobs:
             fi
             cd $DEPLOY_PATH
             docker load -i image.tar || { echo 'Failed to load Docker image'; exit 1; }
-            docker compose --env-file=.env.prod up -d --force-recreate || { echo 'Failed to start containers'; exit 1; }
+            docker compose -f docker-compose.prod.yml --env-file=.env.prod up -d --force-recreate || { echo 'Failed to start containers'; exit 1; }
             echo 'Deployed!'
           "
 
