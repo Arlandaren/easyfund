@@ -3,13 +3,12 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
 )
 
 type LoanPayment struct {
 	PaymentID   int64     `json:"payment_id" db:"payment_id"`
 	LoanID      int64     `json:"loan_id" db:"loan_id"`
-	UserID      uuid.UUID `json:"user_id" db:"user_id"`
+	UserID      int64 `json:"user_id" db:"user_id"`
 	PaidAt      time.Time `json:"paid_at" db:"paid_at"`
 	TotalAmount string    `json:"total_amount" db:"total_amount"`
 	Comment     string    `json:"comment" db:"comment"`

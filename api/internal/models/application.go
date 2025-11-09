@@ -2,13 +2,11 @@ package models
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type CreditApplication struct {
 	ApplicationID   int64     `json:"application_id" db:"application_id"`
-	UserID          uuid.UUID `json:"user_id" db:"user_id"`
+	UserID          int64 `json:"user_id" db:"user_id"`
 	BankID          int16     `json:"bank_id" db:"bank_id"`
 	TypeCode        string    `json:"type_code" db:"type_code"`
 	StatusCode      string    `json:"status_code" db:"status_code"`

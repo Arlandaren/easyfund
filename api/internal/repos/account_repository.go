@@ -4,16 +4,15 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 )
 
 type UserBankAccountRepository interface {
 	CreateAccount(ctx context.Context, account *models.UserBankAccount) error
 	GetAccountByID(ctx context.Context, accountID int64) (*models.UserBankAccount, error)
-	GetUserAccounts(ctx context.Context, userID uuid.UUID) ([]models.UserBankAccount, error)
+	GetUserAccounts(ctx context.Context, userID int64) ([]models.UserBankAccount, error)
 	UpdateBalance(ctx context.Context, accountID int64, balance string) error
-	GetTotalBalance(ctx context.Context, userID uuid.UUID) (string, error)
+	GetTotalBalance(ctx context.Context, userID int64) (string, error)
 }
 
 type userBankAccountRepositoryImpl struct {
@@ -48,7 +47,7 @@ func (r *userBankAccountRepositoryImpl) GetAccountByID(ctx context.Context, acco
 	return acc, nil
 }
 
-func (r *userBankAccountRepositoryImpl) GetUserAccounts(ctx context.Context, userID uuid.UUID) ([]models.UserBankAccount, error) {
+func (r *userBankAccountRepositoryImpl) GetUserAccounts(ctx context.Context, userID int64) ([]models.UserBankAccount, error) {
 	const q = `
 		SELECT account_id, user_id, bank_id, balance, currency, created_at
 		FROM user_bank_accounts WHERE user_id = $1
@@ -77,7 +76,7 @@ func (r *userBankAccountRepositoryImpl) UpdateBalance(ctx context.Context, accou
 	return err
 }
 
-func (r *userBankAccountRepositoryImpl) GetTotalBalance(ctx context.Context, userID uuid.UUID) (string, error) {
+func (r *userBankAccountRepositoryImpl) GetTotalBalance(ctx context.Context, userID int64) (string, error) {
 	const q = `SELECT COALESCE(TO_CHAR(SUM(balance), 'FM9999999999990.00'), '0.00') FROM user_bank_accounts WHERE user_id = $1`
 	var total string
 	err := r.db.QueryRowContext(ctx, q, userID).Scan(&total)

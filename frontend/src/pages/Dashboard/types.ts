@@ -1,7 +1,7 @@
 // Types for Dashboard data
 
 export interface PaymentItem {
-  id: string;
+  id: number; // Изменено с string на number
   icon?: string;
   title: string;
   dueDate: string;
@@ -10,7 +10,7 @@ export interface PaymentItem {
 }
 
 export interface Transaction {
-  id: string;
+  id: number; // Изменено с string на number
   image?: string;
   company?: string;
   title: string;
@@ -19,7 +19,7 @@ export interface Transaction {
 }
 
 export interface DebtItem {
-  id: string;
+  id: number; // Изменено с string на number
   bankName: string;
   amount: number;
   color: string;
@@ -63,4 +63,3 @@ export interface DashboardData {
   // Debts by bank
   debtsByBank: DebtItem[];
 }
-

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Arlandaren/easyfund/internal/logger"
@@ -54,7 +53,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	user, err := h.userService.GetUserByEmail(c.Request.Context(), req.Email)
-	if err != nil || user == nil || user.UserID == uuid.Nil {
+	if err != nil || user == nil || user.UserID == 0 {
 		logger.Log.Warnf("Invalid credentials for email: %s", req.Email)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
@@ -97,7 +96,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	user := &models.User{
-		UserID:       uuid.New(),
 		FullName:     req.FullName,
 		Email:        req.Email,
 		Phone:        req.Phone,

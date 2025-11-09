@@ -1,12 +1,13 @@
 BEGIN;
 
+
 CREATE TABLE loan_payments (
-  payment_id bigserial PRIMARY KEY,
-  loan_id bigint NOT NULL REFERENCES loans(loan_id) ON DELETE CASCADE,
-  user_id uuid NOT NULL REFERENCES users(user_id),
-  paid_at timestamptz NOT NULL DEFAULT now(),
-  total_amount numeric(18,2) NOT NULL,
-  comment text
+  payment_id BIGSERIAL PRIMARY KEY,
+  loan_id BIGINT NOT NULL REFERENCES loans(loan_id) ON DELETE CASCADE,
+  amount numeric(18,2) NOT NULL,
+  paid_at timestamptz NOT NULL,
+  method text NOT NULL,
+  status text NOT NULL DEFAULT 'posted'
 );
 
 CREATE TABLE payment_allocations (

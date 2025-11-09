@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 )
 
@@ -12,7 +11,7 @@ type LoanPaymentRepository interface {
 	CreatePayment(ctx context.Context, payment *models.LoanPayment) (int64, error)
 	GetPaymentByID(ctx context.Context, paymentID int64) (*models.LoanPayment, error)
 	ListLoanPayments(ctx context.Context, loanID int64) ([]models.LoanPayment, error)
-	ListUserPayments(ctx context.Context, userID uuid.UUID) ([]models.LoanPayment, error)
+	ListUserPayments(ctx context.Context, userID int64) ([]models.LoanPayment, error)
 
 	CreatePaymentAllocation(ctx context.Context, alloc *models.PaymentAllocation) error
 	GetPaymentAllocations(ctx context.Context, paymentID int64) ([]models.PaymentAllocation, error)
@@ -75,7 +74,7 @@ func (r *loanPaymentRepositoryImpl) ListLoanPayments(ctx context.Context, loanID
 	return res, rows.Err()
 }
 
-func (r *loanPaymentRepositoryImpl) ListUserPayments(ctx context.Context, userID uuid.UUID) ([]models.LoanPayment, error) {
+func (r *loanPaymentRepositoryImpl) ListUserPayments(ctx context.Context, userID int64) ([]models.LoanPayment, error) {
 	const q = `
 		SELECT payment_id, loan_id, user_id, paid_at, total_amount, comment
 		FROM loan_payments WHERE user_id = $1

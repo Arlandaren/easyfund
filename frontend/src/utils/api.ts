@@ -45,6 +45,7 @@ export const authAPI = {
   register: (data: any) => api.post('/auth/register', data),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  refresh: () => api.post('/auth/refresh'),
 };
 
 export const usersAPI = {
@@ -52,14 +53,47 @@ export const usersAPI = {
   getById: (id: string) => api.get(`/users/${id}`),
   update: (id: string, data: any) => api.put(`/users/${id}`, data),
   delete: (id: string) => api.delete(`/users/${id}`),
+  getRandom: () => api.get('/users/random'),
 };
 
+export const accountsAPI = {
+  getUserAccounts: (userId: string) => api.get(`/users/${userId}/accounts`),
+  getUserBalance: (userId: string) => api.get(`/users/${userId}/balance`),
+};
+
+export const transactionsAPI = {
+  getUserTransactions: (userId: string, params?: any) => 
+    api.get(`/users/${userId}/transactions`, { params }),
+  getUserBankTransactions: (userId: string, bankId: number) => 
+    api.get(`/users/${userId}/banks/${bankId}/transactions`),
+};
+
+export const loansAPI = {
+  getUserLoans: (userId: string) => api.get(`/users/${userId}/loans`),
+  createLoan: (data: any) => api.post('/loans', data),
+  getLoan: (loanId: string) => api.get(`/loans/${loanId}`),
+  makePayment: (loanId: string, data: any) => api.post(`/loans/${loanId}/payment`, data),
+  getUserDebt: (userId: string) => api.get(`/users/${userId}/debt`),
+};
+
+// Добавляем loanApplicationsAPI для обратной совместимости
 export const loanApplicationsAPI = {
-  getAll: () => api.get('/loan-applications'),
-  getById: (id: string) => api.get(`/loan-applications/${id}`),
-  create: (data: any) => api.post('/loan-applications', data),
-  update: (id: string, data: any) => api.put(`/loan-applications/${id}`, data),
-  delete: (id: string) => api.delete(`/loan-applications/${id}`),
+  getAll: () => api.get('/applications'),
+  getById: (id: string) => api.get(`/applications/${id}`),
+  create: (data: any) => api.post('/applications', data),
+  update: (id: string, data: any) => api.put(`/applications/${id}`, data),
+  delete: (id: string) => api.delete(`/applications/${id}`),
+};
+
+export const applicationsAPI = {
+  getAll: () => api.get('/applications'),
+  getById: (id: string) => api.get(`/applications/${id}`),
+  create: (data: any) => api.post('/applications', data),
+  update: (id: string, data: any) => api.put(`/applications/${id}`, data),
+  delete: (id: string) => api.delete(`/applications/${id}`),
+  getUserApplications: (userId: string) => api.get(`/users/${userId}/applications`),
+  approve: (applicationId: string) => api.post(`/applications/${applicationId}/approve`),
+  reject: (applicationId: string) => api.post(`/applications/${applicationId}/reject`),
 };
 
 export const banksAPI = {
@@ -67,3 +101,18 @@ export const banksAPI = {
   getById: (id: string) => api.get(`/banks/${id}`),
 };
 
+export const healthAPI = {
+  check: () => api.get('/health'),
+};
+
+// Dashboard API - собираем данные из разных эндпоинтов
+export const dashboardAPI = {
+  getDashboardData: (userId: string) => 
+    Promise.all([
+      accountsAPI.getUserBalance(userId),
+      loansAPI.getUserDebt(userId),
+      loansAPI.getUserLoans(userId),
+      transactionsAPI.getUserTransactions(userId, { limit: 5 }),
+      applicationsAPI.getUserApplications(userId),
+    ]),
+};

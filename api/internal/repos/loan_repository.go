@@ -4,14 +4,13 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 )
 
 type LoanRepository interface {
 	CreateLoan(ctx context.Context, loan *models.Loan) (int64, error)
 	GetLoanByID(ctx context.Context, loanID int64) (*models.Loan, error)
-	ListUserLoans(ctx context.Context, userID uuid.UUID) ([]models.Loan, error)
+	ListUserLoans(ctx context.Context, userID int64) ([]models.Loan, error)
 
 	CreateLoanSplit(ctx context.Context, split *models.LoanSplit) error
 	GetLoanSplits(ctx context.Context, loanID int64) ([]models.LoanSplit, error)
@@ -55,7 +54,7 @@ func (r *loanRepositoryImpl) GetLoanByID(ctx context.Context, loanID int64) (*mo
 	return l, nil
 }
 
-func (r *loanRepositoryImpl) ListUserLoans(ctx context.Context, userID uuid.UUID) ([]models.Loan, error) {
+func (r *loanRepositoryImpl) ListUserLoans(ctx context.Context, userID int64) ([]models.Loan, error) {
 	const q = `
 		SELECT loan_id, user_id, original_amount, taken_at, interest_rate, status, purpose, created_at
 		FROM loans WHERE user_id = $1

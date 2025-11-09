@@ -3,14 +3,13 @@ package services
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 	"github.com/Arlandaren/easyfund/internal/repos"
 )
 
 type UserBankAccountService interface {
-	GetTotalBalance(ctx context.Context, userID uuid.UUID) (string, error)
-	GetUserAccounts(ctx context.Context, userID uuid.UUID) ([]models.UserBankAccount, error)
+	GetTotalBalance(ctx context.Context, userID int64) (string, error)
+	GetUserAccounts(ctx context.Context, userID int64) ([]models.UserBankAccount, error)
 	CreateAccount(ctx context.Context, account *models.UserBankAccount) error
 }
 
@@ -22,11 +21,11 @@ func NewUserBankAccountService(repo repos.UserBankAccountRepository) UserBankAcc
 	return &userBankAccountServiceImpl{repo: repo}
 }
 
-func (s *userBankAccountServiceImpl) GetTotalBalance(ctx context.Context, userID uuid.UUID) (string, error) {
+func (s *userBankAccountServiceImpl) GetTotalBalance(ctx context.Context, userID int64) (string, error) {
 	return s.repo.GetTotalBalance(ctx, userID)
 }
 
-func (s *userBankAccountServiceImpl) GetUserAccounts(ctx context.Context, userID uuid.UUID) ([]models.UserBankAccount, error) {
+func (s *userBankAccountServiceImpl) GetUserAccounts(ctx context.Context, userID int64) ([]models.UserBankAccount, error) {
 	return s.repo.GetUserAccounts(ctx, userID)
 }
 

@@ -16,12 +16,12 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
     if (total === 0) {
       return {
         chartData: [],
-        percentages: new Map<string, number>(),
+        percentages: new Map<number, number>(), // Изменено с string на number
       };
     }
 
     // 2. Calculate percentage for each bank
-    const percentagesMap = new Map<string, number>();
+    const percentagesMap = new Map<number, number>(); // Изменено с string на number
     debtsByBank.forEach((debt) => {
       const percentage = (debt.amount / total) * 100;
       percentagesMap.set(debt.id, percentage);
@@ -155,4 +155,3 @@ export const FinancialGoalsSection: React.FC<FinancialGoalsSectionProps> = ({
     </section>
   );
 };
-

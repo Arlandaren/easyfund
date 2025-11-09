@@ -43,37 +43,37 @@ export const Dashboard: React.FC = () => {
     },
     payments: [
       {
-        id: '1',
+        id: 1, // Изменено с string на number
         title: 'Кредитная карта Platinum',
         dueDate: 'Ближайший платеж 14 октября',
         amount: '3 554 ₽',
       },
       {
-        id: '2',
+        id: 2, // Изменено с string на number
         title: 'Кредитная карта Сбербанк',
         dueDate: 'Ближайший платеж завтра',
         amount: '12 456 ₽',
       },
       {
-        id: '3',
+        id: 3, // Изменено с string на number
         title: 'Кредит наличными ВТБ',
         dueDate: 'Ближайший платеж сегодня',
         amount: '7 345 ₽',
       },
       {
-        id: '4',
+        id: 4, // Изменено с string на number
         title: 'Кредит онлайн Альфа-Банк',
         dueDate: 'Ближайший платеж 2 сентября',
         amount: '145 554 ₽',
       },
       {
-        id: '5',
+        id: 5, // Изменено с string на number
         title: 'Денежная рассрочка от Т-Банк',
         dueDate: 'Ближайший платеж 9 ноября',
         amount: '2 100 ₽',
       },
       {
-        id: '6',
+        id: 6, // Изменено с string на number
         title: 'Кредит взаймы Сбербанк',
         dueDate: 'Ближайший платеж послезавтра',
         amount: '44 555 ₽',
@@ -81,42 +81,42 @@ export const Dashboard: React.FC = () => {
     ],
     transactions: [
       {
-        id: '1',
+        id: 1, // Изменено с string на number
         company: 'ООО "Автозаводская"',
         title: 'Магазин у дома',
         amount: '12 200 ₽',
         isPositive: false,
       },
       {
-        id: '2',
+        id: 2, // Изменено с string на number
         company: 'ООО "Автозаводская"',
         title: 'Магазин у дома',
         amount: '12 200 ₽',
         isPositive: false,
       },
       {
-        id: '3',
+        id: 3, // Изменено с string на number
         title: 'Зачисление ЗП',
         amount: '+33 200 ₽',
         isPositive: true,
       },
       {
-        id: '4',
+        id: 4, // Изменено с string на number
         title: 'Подписка Яндекс',
         amount: '-399 ₽',
         isPositive: false,
       },
       {
-        id: '5',
+        id: 5, // Изменено с string на number
         title: 'Подписка Яндекс',
         amount: '-399 ₽',
         isPositive: false,
       },
     ],
     debtsByBank: [
-      { id: '1', bankName: 'ВТБ', amount: 213123, color: '#5218f4' },
-      { id: '2', bankName: 'Сбербанк', amount: 650000, color: '#d081e4' },
-      { id: '3', bankName: 'Альфа-Банк', amount: 180000, color: '#189CF4' },
+      { id: 1, bankName: 'ВТБ', amount: 213123, color: '#5218f4' }, // Изменено с string на number
+      { id: 2, bankName: 'Сбербанк', amount: 650000, color: '#d081e4' }, // Изменено с string на number
+      { id: 3, bankName: 'Альфа-Банк', amount: 180000, color: '#189CF4' }, // Изменено с string на number
     ],
   };
 
@@ -166,7 +166,7 @@ export const Dashboard: React.FC = () => {
   };
 
   const userName = useMemo(() => {
-    return user?.name || user?.email?.split('@')[0] || 'Пользователь';
+    return user?.full_name || user?.email?.split('@')[0] || 'Пользователь';
   }, [user]);
 
   if (loading || !dashboardData) {
@@ -237,7 +237,7 @@ export const Dashboard: React.FC = () => {
                 <img
                   className="dashboard__avatar-image"
                   src={profileImage}
-                  alt={user?.name || 'User'}
+                  alt={user?.full_name || 'User'}
                 />
               </button>
               {dropdownOpen && (

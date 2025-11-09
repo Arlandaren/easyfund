@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/logger"
 	"github.com/Arlandaren/easyfund/internal/middleware"
 	"github.com/Arlandaren/easyfund/internal/models"
@@ -35,22 +35,20 @@ func (h *UserHandler) GetRandomUser(c *gin.Context) {
 // GET /api/v1/users/:id (защищенный)
 func (h *UserHandler) GetUser(c *gin.Context) {
 	userIDStr := c.Param("id")
-	userID, err := uuid.Parse(userIDStr)
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Проверяем, что пользователь может только смотреть свой профиль или он admin
 	requestingUserID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	// Если не его профиль, возвращаем ошибку (в реальном приложении могут быть roles)
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to access user %s profile", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to access user %d profile", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -67,7 +65,6 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 // POST /api/v1/users (защищенный)
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	// Получаем user_id из контекста
 	requestingUserID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -98,13 +95,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // PUT /api/v1/users/:id (защищенный)
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	userIDStr := c.Param("id")
-	userID, err := uuid.Parse(userIDStr)
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Проверяем права доступа
 	requestingUserID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -112,7 +108,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to update user %s", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to update user %d", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -139,13 +135,12 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // DELETE /api/v1/users/:id (защищенный)
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	userIDStr := c.Param("id")
-	userID, err := uuid.Parse(userIDStr)
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Проверяем права доступа
 	requestingUserID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -153,7 +148,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	}
 
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to delete user %s", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to delete user %d", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}

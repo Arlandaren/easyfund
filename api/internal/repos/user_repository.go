@@ -4,19 +4,18 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 )
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *models.User) error
-	GetUserByID(ctx context.Context, userID uuid.UUID) (*models.User, error)
+	GetUserByID(ctx context.Context, userID int64) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	GetRandomUser(ctx context.Context) (*models.User, error)
 	ListUsers(ctx context.Context, limit int) ([]models.User, error)
 	UpdateUser(ctx context.Context, user *models.User) error
-	UpdatePasswordHash(ctx context.Context, userID uuid.UUID, hash string) error
-	DeleteUser(ctx context.Context, userID uuid.UUID) error
+	UpdatePasswordHash(ctx context.Context, userID int64, hash string) error
+	DeleteUser(ctx context.Context, userID int64) error
 }
 
 type userRepositoryImpl struct {
@@ -29,15 +28,17 @@ func NewUserRepository(db *sql.DB) UserRepository {
 
 func (r *userRepositoryImpl) CreateUser(ctx context.Context, user *models.User) error {
 	const q = `
-		INSERT INTO users (user_id, full_name, email, phone, password_hash, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (full_name, email, phone, password_hash, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING user_id
 	`
-	_, err := r.db.ExecContext(ctx, q,
-		user.UserID, user.FullName, user.Email, user.Phone, user.PasswordHash, user.CreatedAt, user.UpdatedAt)
+	err := r.db.QueryRowContext(ctx, q,
+		user.FullName, user.Email, user.Phone, user.PasswordHash, user.CreatedAt, user.UpdatedAt,
+	).Scan(&user.UserID)
 	return err
 }
 
-func (r *userRepositoryImpl) GetUserByID(ctx context.Context, userID uuid.UUID) (*models.User, error) {
+func (r *userRepositoryImpl) GetUserByID(ctx context.Context, userID int64) (*models.User, error) {
 	const q = `
 		SELECT user_id, full_name, email, phone, password_hash, created_at, updated_at
 		FROM users WHERE user_id = $1
@@ -115,13 +116,13 @@ func (r *userRepositoryImpl) UpdateUser(ctx context.Context, user *models.User) 
 	return err
 }
 
-func (r *userRepositoryImpl) UpdatePasswordHash(ctx context.Context, userID uuid.UUID, hash string) error {
+func (r *userRepositoryImpl) UpdatePasswordHash(ctx context.Context, userID int64, hash string) error {
 	const q = `UPDATE users SET password_hash=$1, updated_at=NOW() WHERE user_id=$2`
 	_, err := r.db.ExecContext(ctx, q, hash, userID)
 	return err
 }
 
-func (r *userRepositoryImpl) DeleteUser(ctx context.Context, userID uuid.UUID) error {
+func (r *userRepositoryImpl) DeleteUser(ctx context.Context, userID int64) error {
 	const q = `DELETE FROM users WHERE user_id = $1`
 	_, err := r.db.ExecContext(ctx, q, userID)
 	return err

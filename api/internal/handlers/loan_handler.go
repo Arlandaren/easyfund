@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/logger"
 	"github.com/Arlandaren/easyfund/internal/middleware"
 	"github.com/Arlandaren/easyfund/internal/models"
@@ -34,7 +33,6 @@ type CreateLoanRequest struct {
 
 // POST /api/v1/loans (защищенный)
 func (h *LoanHandler) CreateLoan(c *gin.Context) {
-	// Получаем user_id из контекста
 	userID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -64,7 +62,7 @@ func (h *LoanHandler) CreateLoan(c *gin.Context) {
 		return
 	}
 
-	logger.Log.Infof("User %s created loan with ID %d", userID, detail.Loan.LoanID)
+	logger.Log.Infof("User %d created loan with ID %d", userID, detail.Loan.LoanID)
 	c.JSON(http.StatusCreated, detail)
 }
 
@@ -92,7 +90,7 @@ func (h *LoanHandler) GetLoanDetail(c *gin.Context) {
 
 	// Проверяем, что это кредит пользователя
 	if detail.Loan.UserID != userID {
-		logger.Log.Warnf("User %s tried to access loan %d of user %s", userID, loanID, detail.Loan.UserID)
+		logger.Log.Warnf("User %d tried to access loan %d of user %d", userID, loanID, detail.Loan.UserID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -100,7 +98,7 @@ func (h *LoanHandler) GetLoanDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, detail)
 }
 
-// GET /api/v1/users/:user_id/loans (защищенный)
+// GET /api/v1/users/:id/loans (защищенный)
 func (h *LoanHandler) ListUserLoans(c *gin.Context) {
 	requestingUserID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
@@ -108,8 +106,8 @@ func (h *LoanHandler) ListUserLoans(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.Param("user_id")
-	userID, err := uuid.Parse(userIDStr)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
@@ -117,7 +115,7 @@ func (h *LoanHandler) ListUserLoans(c *gin.Context) {
 
 	// Проверяем права доступа
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to list loans of user %s", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to list loans of user %d", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -132,7 +130,7 @@ func (h *LoanHandler) ListUserLoans(c *gin.Context) {
 	c.JSON(http.StatusOK, loans)
 }
 
-// GET /api/v1/users/:user_id/debt (защищенный)
+// GET /api/v1/users/:id/debt (защищенный)
 func (h *LoanHandler) GetTotalDebt(c *gin.Context) {
 	requestingUserID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
@@ -140,8 +138,8 @@ func (h *LoanHandler) GetTotalDebt(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.Param("user_id")
-	userID, err := uuid.Parse(userIDStr)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
@@ -149,7 +147,7 @@ func (h *LoanHandler) GetTotalDebt(c *gin.Context) {
 
 	// Проверяем права доступа
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to get debt of user %s", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to get debt of user %d", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -201,7 +199,7 @@ func (h *LoanHandler) MakePayment(c *gin.Context) {
 	}
 
 	if loan.Loan.UserID != userID {
-		logger.Log.Warnf("User %s tried to pay loan %d of user %s", userID, loanID, loan.Loan.UserID)
+		logger.Log.Warnf("User %d tried to pay loan %d of user %d", userID, loanID, loan.Loan.UserID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -235,6 +233,6 @@ func (h *LoanHandler) MakePayment(c *gin.Context) {
 		return
 	}
 
-	logger.Log.Infof("User %s made payment for loan %d", userID, loanID)
+	logger.Log.Infof("User %d made payment for loan %d", userID, loanID)
 	c.JSON(http.StatusCreated, gin.H{"message": "Payment recorded successfully"})
 }

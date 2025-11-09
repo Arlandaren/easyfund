@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/logger"
 	"github.com/Arlandaren/easyfund/internal/middleware"
 	"github.com/Arlandaren/easyfund/internal/services"
@@ -27,16 +26,15 @@ func (h *TransactionHandler) GetUserTransactionHistory(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.Param("user_id")
-	userID, err := uuid.Parse(userIDStr)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Проверяем права доступа
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to get transactions of user %s", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to get transactions of user %d", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -59,16 +57,15 @@ func (h *TransactionHandler) GetBankTransactionHistory(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.Param("user_id")
-	userID, err := uuid.Parse(userIDStr)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Проверяем права доступа
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to get bank transactions of user %s", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to get bank transactions of user %d", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}

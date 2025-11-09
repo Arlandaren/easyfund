@@ -59,4 +59,3 @@ export const DebtOverviewSection: React.FC<DebtOverviewSectionProps> = ({
     </section>
   );
 };
-

@@ -4,14 +4,13 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 )
 
 type CreditApplicationRepository interface {
 	CreateApplication(ctx context.Context, app *models.CreditApplication) (int64, error)
 	GetApplicationByID(ctx context.Context, appID int64) (*models.CreditApplication, error)
-	ListUserApplications(ctx context.Context, userID uuid.UUID) ([]models.CreditApplication, error)
+	ListUserApplications(ctx context.Context, userID int64) ([]models.CreditApplication, error)
 	UpdateApplicationStatus(ctx context.Context, appID int64, status string) error
 	UpdateApplicationLoanID(ctx context.Context, appID int64, loanID int64) error
 }
@@ -52,7 +51,7 @@ func (r *creditApplicationRepositoryImpl) GetApplicationByID(ctx context.Context
 	return a, nil
 }
 
-func (r *creditApplicationRepositoryImpl) ListUserApplications(ctx context.Context, userID uuid.UUID) ([]models.CreditApplication, error) {
+func (r *creditApplicationRepositoryImpl) ListUserApplications(ctx context.Context, userID int64) ([]models.CreditApplication, error) {
 	const q = `
 		SELECT application_id, user_id, bank_id, type_code, status_code, requested_amount, loan_id, submitted_at, updated_at
 		FROM credit_applications WHERE user_id = $1

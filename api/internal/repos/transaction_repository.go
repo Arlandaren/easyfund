@@ -3,17 +3,15 @@ package repos
 import (
 	"context"
 	"database/sql"
-
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 )
 
 type TransactionRepository interface {
 	CreateTransaction(ctx context.Context, tx *models.Transaction) error
 	GetTransactionByID(ctx context.Context, id int64) (*models.Transaction, error)
-	ListUserTransactions(ctx context.Context, userID uuid.UUID) ([]models.Transaction, error)
-	ListBankTransactions(ctx context.Context, userID uuid.UUID, bankID int16) ([]models.Transaction, error)
-	GetUserTotalSpent(ctx context.Context, userID uuid.UUID) (string, error)
+	ListUserTransactions(ctx context.Context, userID int64) ([]models.Transaction, error)
+	ListBankTransactions(ctx context.Context, userID int64, bankID int16) ([]models.Transaction, error)
+	GetUserTotalSpent(ctx context.Context, userID int64) (string, error)
 }
 
 type transactionRepositoryImpl struct {
@@ -28,8 +26,11 @@ func (r *transactionRepositoryImpl) CreateTransaction(ctx context.Context, t *mo
 	const q = `
 		INSERT INTO transactions (user_id, bank_id, occurred_at, amount, category, description)
 		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING transaction_id
 	`
-	_, err := r.db.ExecContext(ctx, q, t.UserID, t.BankID, t.OccurredAt, t.Amount, t.Category, t.Description)
+	err := r.db.QueryRowContext(ctx, q, 
+		t.UserID, t.BankID, t.OccurredAt, t.Amount, t.Category, t.Description,
+	).Scan(&t.TransactionID)
 	return err
 }
 
@@ -48,7 +49,7 @@ func (r *transactionRepositoryImpl) GetTransactionByID(ctx context.Context, id i
 	return t, nil
 }
 
-func (r *transactionRepositoryImpl) ListUserTransactions(ctx context.Context, userID uuid.UUID) ([]models.Transaction, error) {
+func (r *transactionRepositoryImpl) ListUserTransactions(ctx context.Context, userID int64) ([]models.Transaction, error) {
 	const q = `
 		SELECT transaction_id, user_id, bank_id, occurred_at, amount, category, description
 		FROM transactions WHERE user_id = $1
@@ -71,7 +72,7 @@ func (r *transactionRepositoryImpl) ListUserTransactions(ctx context.Context, us
 	return res, rows.Err()
 }
 
-func (r *transactionRepositoryImpl) ListBankTransactions(ctx context.Context, userID uuid.UUID, bankID int16) ([]models.Transaction, error) {
+func (r *transactionRepositoryImpl) ListBankTransactions(ctx context.Context, userID int64, bankID int16) ([]models.Transaction, error) {
 	const q = `
 		SELECT transaction_id, user_id, bank_id, occurred_at, amount, category, description
 		FROM transactions WHERE user_id = $1 AND bank_id = $2
@@ -94,7 +95,7 @@ func (r *transactionRepositoryImpl) ListBankTransactions(ctx context.Context, us
 	return res, rows.Err()
 }
 
-func (r *transactionRepositoryImpl) GetUserTotalSpent(ctx context.Context, userID uuid.UUID) (string, error) {
+func (r *transactionRepositoryImpl) GetUserTotalSpent(ctx context.Context, userID int64) (string, error) {
 	const q = `SELECT COALESCE(TO_CHAR(SUM(amount), 'FM9999999999990.00'), '0.00') FROM transactions WHERE user_id = $1`
 	var total string
 	err := r.db.QueryRowContext(ctx, q, userID).Scan(&total)

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/logger"
 	"github.com/Arlandaren/easyfund/internal/middleware"
 	"github.com/Arlandaren/easyfund/internal/models"
@@ -58,11 +57,11 @@ func (h *CreditApplicationHandler) SubmitApplication(c *gin.Context) {
 		return
 	}
 
-	logger.Log.Infof("User %s submitted credit application %d", userID, appID)
+	logger.Log.Infof("User %d submitted credit application %d", userID, appID)
 	c.JSON(http.StatusCreated, gin.H{"application_id": appID, "status": "PENDING"})
 }
 
-// GET /api/v1/users/:user_id/applications (защищенный)
+// GET /api/v1/users/:id/applications (защищенный)
 func (h *CreditApplicationHandler) GetUserApplications(c *gin.Context) {
 	requestingUserID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
@@ -70,8 +69,8 @@ func (h *CreditApplicationHandler) GetUserApplications(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.Param("user_id")
-	userID, err := uuid.Parse(userIDStr)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
@@ -79,7 +78,7 @@ func (h *CreditApplicationHandler) GetUserApplications(c *gin.Context) {
 
 	// Проверяем права доступа
 	if requestingUserID != userID {
-		logger.Log.Warnf("User %s tried to get applications of user %s", requestingUserID, userID)
+		logger.Log.Warnf("User %d tried to get applications of user %d", requestingUserID, userID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 		return
 	}
@@ -100,7 +99,6 @@ type ApproveApplicationRequest struct {
 
 // POST /api/v1/applications/:id/approve (администратор/защищенный)
 func (h *CreditApplicationHandler) ApproveApplication(c *gin.Context) {
-	// Получаем user_id из контекста (должен быть админ, но проверка ролей опциональна)
 	userID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -127,13 +125,12 @@ func (h *CreditApplicationHandler) ApproveApplication(c *gin.Context) {
 		return
 	}
 
-	logger.Log.Infof("User %s (admin) approved application %d", userID, appID)
+	logger.Log.Infof("User %d (admin) approved application %d", userID, appID)
 	c.JSON(http.StatusOK, gin.H{"message": "Application approved"})
 }
 
 // POST /api/v1/applications/:id/reject (администратор/защищенный)
 func (h *CreditApplicationHandler) RejectApplication(c *gin.Context) {
-	// Получаем user_id из контекста (должен быть админ, но проверка ролей опциональна)
 	userID, err := middleware.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -154,6 +151,6 @@ func (h *CreditApplicationHandler) RejectApplication(c *gin.Context) {
 		return
 	}
 
-	logger.Log.Infof("User %s (admin) rejected application %d", userID, appID)
+	logger.Log.Infof("User %d (admin) rejected application %d", userID, appID)
 	c.JSON(http.StatusOK, gin.H{"message": "Application rejected"})
 }

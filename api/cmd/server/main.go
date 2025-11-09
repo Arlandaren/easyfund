@@ -36,6 +36,7 @@ func main() {
 	// Gin
 	router := gin.Default()
 
+
 	// CORSMiddleware: используем без аргументов (см. internal/middleware/cors.go ниже)
 	router.Use(middleware.CORSMiddleware())
 

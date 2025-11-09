@@ -2,10 +2,9 @@ package handlers
 
 import (
     "net/http"
+    "strconv"
 
     "github.com/gin-gonic/gin"
-    "github.com/google/uuid"
-
     "github.com/Arlandaren/easyfund/internal/logger"
     "github.com/Arlandaren/easyfund/internal/middleware"
     "github.com/Arlandaren/easyfund/internal/services"
@@ -28,7 +27,7 @@ func (h *UserBankAccountHandler) GetTotalBalance(c *gin.Context) {
     }
 
     userIDStr := c.Param("id")
-    userID, err := uuid.Parse(userIDStr)
+    userID, err := strconv.ParseInt(userIDStr, 10, 64)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
         return
@@ -36,7 +35,7 @@ func (h *UserBankAccountHandler) GetTotalBalance(c *gin.Context) {
 
     // Проверяем права доступа
     if requestingUserID != userID {
-        logger.Log.Warnf("User %s tried to get balance of user %s", requestingUserID, userID)
+        logger.Log.Warnf("User %d tried to get balance of user %d", requestingUserID, userID)
         c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
         return
     }
@@ -60,7 +59,7 @@ func (h *UserBankAccountHandler) GetUserAccounts(c *gin.Context) {
     }
 
     userIDStr := c.Param("id")
-    userID, err := uuid.Parse(userIDStr)
+    userID, err := strconv.ParseInt(userIDStr, 10, 64)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
         return
@@ -68,7 +67,7 @@ func (h *UserBankAccountHandler) GetUserAccounts(c *gin.Context) {
 
     // Проверяем права доступа
     if requestingUserID != userID {
-        logger.Log.Warnf("User %s tried to get accounts of user %s", requestingUserID, userID)
+        logger.Log.Warnf("User %d tried to get accounts of user %d", requestingUserID, userID)
         c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
         return
     }

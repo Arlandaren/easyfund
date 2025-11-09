@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -39,7 +40,7 @@ func (s *tokenServiceImpl) GenerateToken(user *models.User) (string, error) {
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 			Issuer:    "your_project_api",
-			Subject:   user.UserID.String(),
+			Subject:   strconv.FormatInt(user.UserID, 10), // Исправлено: int64 в string
 		},
 	}
 

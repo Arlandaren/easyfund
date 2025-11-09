@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 	"github.com/Arlandaren/easyfund/internal/repos"
 )
@@ -12,9 +11,9 @@ import (
 type LoanService interface {
 	CreateLoan(ctx context.Context, loan *models.Loan, splits []map[int16]string) (*models.LoanDetailDTO, error)
 	GetLoanDetail(ctx context.Context, loanID int64) (*models.LoanDetailDTO, error)
-	ListUserLoans(ctx context.Context, userID uuid.UUID) ([]models.Loan, error)
+	ListUserLoans(ctx context.Context, userID int64) ([]models.Loan, error)
 	MakePayment(ctx context.Context, payment *models.LoanPayment, allocations []models.PaymentAllocation) error
-	GetTotalDebt(ctx context.Context, userID uuid.UUID) (string, error)
+	GetTotalDebt(ctx context.Context, userID int64) (string, error)
 }
 
 type loanServiceImpl struct {
@@ -84,7 +83,6 @@ func (s *loanServiceImpl) GetLoanDetail(ctx context.Context, loanID int64) (*mod
 	}
 
 	// Вычисляем процент выплаченного и остаток долга
-	// TODO: добавить правильный расчет на основе principal/interest
 	percentPaid := 0.0
 	remainingDebt := loan.OriginalAmount
 
@@ -97,7 +95,7 @@ func (s *loanServiceImpl) GetLoanDetail(ctx context.Context, loanID int64) (*mod
 	}, nil
 }
 
-func (s *loanServiceImpl) ListUserLoans(ctx context.Context, userID uuid.UUID) ([]models.Loan, error) {
+func (s *loanServiceImpl) ListUserLoans(ctx context.Context, userID int64) ([]models.Loan, error) {
 	return s.loanRepo.ListUserLoans(ctx, userID)
 }
 
@@ -124,7 +122,7 @@ func (s *loanServiceImpl) MakePayment(ctx context.Context, payment *models.LoanP
 	return nil
 }
 
-func (s *loanServiceImpl) GetTotalDebt(ctx context.Context, userID uuid.UUID) (string, error) {
+func (s *loanServiceImpl) GetTotalDebt(ctx context.Context, userID int64) (string, error) {
 	// SELECT SUM(remaining_principal) FROM loan_splits WHERE loan_id IN (SELECT loan_id FROM loans WHERE user_id = $1 AND status = 'ACTIVE')
 	// TODO: реализовать правильный запрос
 	return "0.00", nil

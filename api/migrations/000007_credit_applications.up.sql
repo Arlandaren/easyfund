@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE TABLE credit_applications (
   application_id bigserial PRIMARY KEY,
-  user_id uuid NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  user_id bigint NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   bank_id smallint NOT NULL REFERENCES banks(bank_id),
   type_code text NOT NULL REFERENCES credit_application_types(type_code),
   status_code text NOT NULL REFERENCES credit_application_statuses(status_code),

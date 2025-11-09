@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/Arlandaren/easyfund/internal/models"
 	"github.com/Arlandaren/easyfund/internal/repos"
 )
 
 type CreditApplicationService interface {
 	SubmitApplication(ctx context.Context, app *models.CreditApplication) (int64, error)
-	GetApplications(ctx context.Context, userID uuid.UUID) ([]models.CreditApplication, error)
+	GetApplications(ctx context.Context, userID int64) ([]models.CreditApplication, error)
 	ApproveApplication(ctx context.Context, appID int64, splits []map[int16]string) error
 	RejectApplication(ctx context.Context, appID int64) error
 }
@@ -32,7 +31,7 @@ func (s *creditApplicationServiceImpl) SubmitApplication(ctx context.Context, ap
 	return s.appRepo.CreateApplication(ctx, app)
 }
 
-func (s *creditApplicationServiceImpl) GetApplications(ctx context.Context, userID uuid.UUID) ([]models.CreditApplication, error) {
+func (s *creditApplicationServiceImpl) GetApplications(ctx context.Context, userID int64) ([]models.CreditApplication, error) {
 	return s.appRepo.ListUserApplications(ctx, userID)
 }
 
