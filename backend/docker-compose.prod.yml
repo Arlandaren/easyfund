@@ -42,8 +42,9 @@ services:
     restart: "no"
 
   backend:
+    image: app:latest
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: app_easy
     env_file:
