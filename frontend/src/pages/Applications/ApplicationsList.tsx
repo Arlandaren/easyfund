@@ -2,42 +2,92 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout, Card, Button, Input } from '../../components';
 import { useAuth } from '../../context/AuthContext';
-import { loanApplicationsAPI } from '../../utils/api';
+import { loansAPI, applicationsAPI } from '../../utils/api';
 import './ApplicationsList.css';
 
-interface LoanApplication {
-  id: string;
-  amount: number;
-  purpose: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
+interface CreditApplication {
+  id: number;
+  name: string;
+  amount: string;
+  interest_rate: string;
+  months?: number;
+  status?: string;
+  purpose?: string;
+  created_at?: string;
+  submitted_at?: string;
+  updated_at?: string;
+  bank_id?: number;
+  term_months?: number;
 }
 
 export const ApplicationsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [applications, setApplications] = useState<LoanApplication[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<LoanApplication[]>([]);
+  const [applications, setApplications] = useState<CreditApplication[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<CreditApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
-    fetchApplications();
-  }, []);
+    if (user?.user_id) {
+      fetchApplications();
+    }
+  }, [user?.user_id]);
 
   useEffect(() => {
     filterApplications();
   }, [applications, searchTerm, filterStatus]);
 
   const fetchApplications = async () => {
+    if (!user?.user_id) return;
+
     try {
-      const response = await loanApplicationsAPI.getAll();
-      setApplications(response.data);
-      setFilteredApplications(response.data);
-    } catch (error) {
-      console.error('Error fetching applications:', error);
+      setLoading(true);
+      setError(null);
+
+      // Получаем оба типа предложений: пользовательские приложения и кредиты
+      const [loansResponse, applicationsResponse] = await Promise.all([
+        loansAPI.getUserLoans(String(user.user_id)).catch(() => ({ data: [] })),
+        applicationsAPI.getUserApplications(String(user.user_id)).catch(() => ({ data: [] })),
+      ]);
+
+      const loansData = Array.isArray(loansResponse?.data) ? loansResponse.data : [];
+      const appsData = Array.isArray(applicationsResponse?.data) ? applicationsResponse.data : [];
+
+      // Преобразуем кредиты в единый формат
+      const formattedLoans: CreditApplication[] = loansData.map((loan: any) => ({
+        id: loan.loan_id ?? loan.id ?? 0,
+        name: `Кредит #${loan.loan_id ?? loan.id ?? 0}`,
+        amount: loan.original_amount || loan.amount || '0',
+        interest_rate: loan.interest_rate || loan.rate || '0',
+        months: loan.months || 0,
+        status: loan.status || 'active',
+        purpose: loan.purpose || 'Кредит',
+        created_at: loan.taken_at || loan.created_at,
+      }));
+
+      // Преобразуем приложения
+      const formattedApplications: CreditApplication[] = appsData.map((app: any) => ({
+        id: app.application_id ?? app.id ?? 0,
+        name: `Приложение #${app.application_id ?? app.id ?? 0}`,
+        amount: app.requested_amount || app.amount || '0',
+        interest_rate: '0',
+        status: app.status || app.status_code || 'pending',
+        purpose: app.purpose || 'Заявка на кредит',
+        term_months: app.term_months,
+        bank_id: app.bank_id,
+        submitted_at: app.submitted_at,
+        updated_at: app.updated_at,
+      }));
+
+      // Объединяем и сортируем по дате
+      const combined = [...formattedLoans, ...formattedApplications];
+      setApplications(combined);
+    } catch (err) {
+      console.error('❌ Error fetching applications:', err);
+      setError('Не удалось загрузить кредитные предложения');
     } finally {
       setLoading(false);
     }
@@ -47,10 +97,10 @@ export const ApplicationsList: React.FC = () => {
     let filtered = applications;
 
     if (searchTerm) {
-      filtered = filtered.filter(
-        (app) =>
-          app.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          app.amount.toString().includes(searchTerm)
+      filtered = filtered.filter((app) =>
+        app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (app.purpose ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.amount.includes(searchTerm)
       );
     }
 
@@ -61,102 +111,153 @@ export const ApplicationsList: React.FC = () => {
     setFilteredApplications(filtered);
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      draft: 'var(--color-neutral-500)',
-      submitted: 'var(--color-info-500)',
-      under_review: 'var(--color-warning-500)',
-      approved: 'var(--color-success-500)',
-      rejected: 'var(--color-error-500)',
-      partially_approved: 'var(--color-secondary-500)',
+  const getStatusBadge = (status?: string) => {
+    if (!status) return { label: 'Неизвестно', color: '#9ca3af' };
+
+    const statusMap: Record<string, { label: string; color: string }> = {
+      active: { label: 'Активный', color: '#10b981' },
+      pending: { label: 'На рассмотрении', color: '#f59e0b' },
+      approved: { label: 'Одобрено', color: '#3b82f6' },
+      rejected: { label: 'Отклонено', color: '#ef4444' },
+      completed: { label: 'Завершено', color: '#6366f1' },
+      under_review: { label: 'На проверке', color: '#f59e0b' },
+      partially_approved: { label: 'Частично одобрено', color: '#8b5cf6' },
     };
-    return colors[status] || 'var(--color-neutral-500)';
+
+    return statusMap[status] || { label: status.toUpperCase(), color: '#9ca3af' };
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleDateString('ru-RU');
+    } catch {
+      return dateStr;
+    }
   };
 
   if (loading) {
     return (
-      <Layout user={user ? { name: user.name, email: user.email, role: user.role } : undefined}>
-        <div className="applications__loading">Loading...</div>
+      <Layout>
+        <div className="applications-container loading">
+          <div className="applications-spinner">Загрузка кредитных предложений...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="applications-container error">
+          <div className="applications-error">{error}</div>
+          <Button onClick={() => fetchApplications()}>Попробовать снова</Button>
+        </div>
       </Layout>
     );
   }
 
   return (
-    <Layout user={user ? { name: user.name, email: user.email, role: user.role } : undefined}>
-      <div className="applications">
-        <div className="applications__header">
-          <h1 className="applications__title">Loan Applications</h1>
-          <Button onClick={() => navigate('/applications/new')}>
-            New Application
+    <Layout>
+      <div className="applications-container">
+        <div className="applications-header">
+          <h1 className="applications-title">Кредитные предложения</h1>
+          <Button onClick={() => navigate('/applications/new')} className="applications-btn-new">
+            + Новая заявка
           </Button>
         </div>
 
-        <div className="applications__filters">
+        <div className="applications-filters">
           <Input
-            type="search"
-            placeholder="Search applications..."
+            type="text"
+            placeholder="Поиск по названию или целям..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="applications__search"
+            className="applications-search"
           />
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="input"
-            style={{ maxWidth: '200px' }}
+            className="applications-select"
           >
-            <option value="all">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="submitted">Submitted</option>
-            <option value="under_review">Under Review</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="all">Все статусы</option>
+            <option value="active">Активный</option>
+            <option value="pending">На рассмотрении</option>
+            <option value="approved">Одобрено</option>
+            <option value="rejected">Отклонено</option>
+            <option value="completed">Завершено</option>
           </select>
         </div>
 
-        <div className="applications__list">
-          {filteredApplications.length === 0 ? (
-            <Card variant="outlined" className="applications__empty">
-              <p>No applications found.</p>
-            </Card>
-          ) : (
-            filteredApplications.map((app) => (
-              <Card
-                key={app.id}
-                variant="outlined"
-                className="applications__item"
-                onClick={() => navigate(`/applications/${app.id}`)}
-              >
-                <div className="applications__item-header">
-                  <div>
-                    <h3 className="applications__item-amount">
-                      ${app.amount.toLocaleString()}
-                    </h3>
-                    <p className="applications__item-purpose">{app.purpose}</p>
-                  </div>
-                  <span
-                    className="applications__item-status"
-                    style={{ color: getStatusColor(app.status) }}
-                  >
-                    {app.status.replace('_', ' ').toUpperCase()}
-                  </span>
-                </div>
-                <div className="applications__item-footer">
-                  <span className="applications__item-date">
-                    Created: {new Date(app.created_at).toLocaleDateString()}
-                  </span>
-                  {app.updated_at !== app.created_at && (
-                    <span className="applications__item-date">
-                      Updated: {new Date(app.updated_at).toLocaleDateString()}
+        {filteredApplications.length === 0 ? (
+          <Card className="applications-empty">
+            <p>Кредитные предложения не найдены</p>
+          </Card>
+        ) : (
+          <div className="applications-grid">
+            {filteredApplications.map((app) => {
+              const statusBadge = getStatusBadge(app.status);
+              return (
+                <Card
+                  key={app.id}
+                  onClick={() => navigate(`/applications/${app.id}`)}
+                  className="applications-card"
+                >
+                  <div className="applications-card-header">
+                    <h3 className="applications-card-title">{app.name}</h3>
+                    <span
+                      className="applications-badge"
+                      style={{ backgroundColor: statusBadge.color }}
+                    >
+                      {statusBadge.label}
                     </span>
-                  )}
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
+                  </div>
+
+                  <div className="applications-card-content">
+                    <div className="applications-field">
+                      <span className="applications-label">Сумма:</span>
+                      <span className="applications-value">{app.amount} ₽</span>
+                    </div>
+
+                    {app.interest_rate && app.interest_rate !== '0' && (
+                      <div className="applications-field">
+                        <span className="applications-label">Процентная ставка:</span>
+                        <span className="applications-value">{app.interest_rate}%</span>
+                      </div>
+                    )}
+
+                    {app.months && app.months > 0 && (
+                      <div className="applications-field">
+                        <span className="applications-label">Срок:</span>
+                        <span className="applications-value">{app.months} месяцев</span>
+                      </div>
+                    )}
+
+                    {app.purpose && (
+                      <div className="applications-field">
+                        <span className="applications-label">Назначение:</span>
+                        <span className="applications-value">{app.purpose}</span>
+                      </div>
+                    )}
+
+                    {app.created_at && (
+                      <div className="applications-field">
+                        <span className="applications-label">Создано:</span>
+                        <span className="applications-value">{formatDate(app.created_at)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="applications-card-footer">
+                    <Button className="applications-card-btn">Просмотреть</Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </Layout>
   );
 };
-

@@ -1,63 +1,84 @@
 package main
 
 import (
-    "context"
-    "log"
+	"fmt"
+	"log"
 
-    _ "github.com/lib/pq"
-    "entgo.io/ent/dialect"
-    "entgo.io/ent/dialect/sql"
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 
-    "github.com/Arlandaren/easyfund/ent"
-    "github.com/Arlandaren/easyfund/internal/config"
-    httpDelivery "github.com/Arlandaren/easyfund/internal/delivery/http"
-    "github.com/Arlandaren/easyfund/pkg/logger"
-    "go.uber.org/zap"
+	"github.com/Arlandaren/easyfund/internal/config"
+	"github.com/Arlandaren/easyfund/internal/handlers"
+	"github.com/Arlandaren/easyfund/internal/logger"
+	"github.com/Arlandaren/easyfund/internal/middleware"
+	"github.com/Arlandaren/easyfund/internal/repos"
+	"github.com/Arlandaren/easyfund/internal/services"
 )
 
 func main() {
-    // Load config
-    cfg, err := config.Load()
-    if err != nil {
-        log.Fatalf("Failed to load config: %v", err)
-    }
+	// Загрузка конфигурации
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
-    // Init logger
-    lg, err := logger.New()
-    if err != nil {
-        log.Fatalf("Failed to init logger: %v", err)
-    }
-    defer func() {
-        if err := lg.Sync(); err != nil {
-            log.Printf("Error syncing logger: %v", err)
-        }
-    }()
+	// Логгер
+	logger.Init(cfg.Logger.Level, cfg.Logger.File)
+	defer logger.Log.Sync()
 
-    // Connect to DB
-    drv, err := sql.Open(dialect.Postgres, cfg.PostgresURL)
-    if err != nil {
-        lg.Fatal("Failed to connect to database", zap.Error(err))
-    }
+	// БД
+	db, err := config.NewDB(cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
 
-    client := ent.NewClient(ent.Driver(drv))
-    defer func() {
-        if err := client.Close(); err != nil {
-            lg.Error("Error closing database client", zap.Error(err))
-        }
-    }()
+	// Gin
+	router := gin.Default()
 
-    // Run migrations
-    if err := client.Schema.Create(context.Background()); err != nil {
-        lg.Fatal("Failed to run migrations", zap.Error(err))
-    }
 
-    lg.Info("Database migrations completed")
+	// CORSMiddleware: используем без аргументов (см. internal/middleware/cors.go ниже)
+	router.Use(middleware.CORSMiddleware())
 
-    // Start HTTP server
-    router := httpDelivery.NewRouter()
-    lg.Info("Starting HTTP server on " + cfg.HTTPAddress)
+	// Репозитории
+	userRepo := repos.NewUserRepository(db)
+	loanRepo := repos.NewLoanRepository(db)
+	accountRepo := repos.NewUserBankAccountRepository(db)
+	paymentRepo := repos.NewLoanPaymentRepository(db)
+	transactionRepo := repos.NewTransactionRepository(db)
+	applicationRepo := repos.NewCreditApplicationRepository(db)
 
-    if err := router.Run(cfg.HTTPAddress); err != nil {
-        lg.Fatal("Failed to start HTTP server", zap.Error(err))
-    }
+	// Сервисы
+	userService := services.NewUserService(userRepo)                // содержит GetUserByEmail (исправлено)
+	tokenService := services.NewTokenService(&cfg.JWT)
+	loanService := services.NewLoanService(loanRepo, accountRepo, paymentRepo)
+	accountService := services.NewUserBankAccountService(accountRepo)
+	transactionService := services.NewTransactionService(transactionRepo)
+	applicationService := services.NewCreditApplicationService(applicationRepo, loanRepo)
+
+	// Хэндлеры
+	userHandler := handlers.NewUserHandler(userService)
+	loanHandler := handlers.NewLoanHandler(loanService, accountService)
+	accountHandler := handlers.NewUserBankAccountHandler(accountService)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+	applicationHandler := handlers.NewCreditApplicationHandler(applicationService)
+	authHandler := handlers.NewAuthHandler(userService, tokenService)
+
+	// Роутинг
+	handlers.RegisterRoutes(
+		router,
+		userHandler,
+		loanHandler,
+		accountHandler,
+		transactionHandler,
+		applicationHandler,
+		authHandler,
+		cfg.JWT.Secret,
+	)
+
+	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
+	logger.Log.Infof("Starting server on %s", addr)
+	if err := router.Run(addr); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }

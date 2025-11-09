@@ -31,7 +31,7 @@ jobs:
 
       # Сборка Docker-образа
       - name: Build Docker image
-        run: docker compose -f ./frontend/docker-compose.yml build
+        run: docker compose build
 
       # Сохранение Docker-образа в tar-файл
       - name: Save Docker image

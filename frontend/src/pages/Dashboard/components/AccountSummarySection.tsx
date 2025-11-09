@@ -50,4 +50,3 @@ export const AccountSummarySection: React.FC<AccountSummarySectionProps> = ({
     </section>
   );
 };
-

@@ -1,32 +1,31 @@
-FROM golang:1.23.2-alpine AS builder
+# syntax=docker/dockerfile:1
 
-RUN apk update && apk add --no-cache ca-certificates git gcc g++ libc-dev binutils
+FROM golang:1.25-alpine AS builder
+WORKDIR /app
 
-WORKDIR /opt
+RUN apk add --no-cache git ca-certificates
 
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    GOFLAGS=-trimpath \
+    GOPROXY=https://proxy.golang.org,direct
+    
 COPY go.mod go.sum ./
-RUN go mod download && go mod verify
+RUN go mod download
 
 COPY . .
 
-RUN find ./ -name '*~' -delete
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./cmd/server
 
-RUN go mod tidy
+FROM alpine:3.20
+WORKDIR /srv
 
-RUN go build -o bin/app ./cmd/app/main.go
+RUN apk --no-cache add ca-certificates
 
-# RUN go build -o bin/migrator ./cmd/migrator/main.go
+COPY --from=builder /app/server /usr/local/bin/server
 
+EXPOSE 8080
+ENV PORT=8080
 
-FROM alpine AS runner
-
-RUN apk update && apk add --no-cache ca-certificates libc6-compat bash && rm -rf /var/cache/apk/**
-
-WORKDIR /opt
-
-# COPY --from=builder /opt/migrations ./migrations
-COPY --from=builder /opt/bin/app ./
-# COPY --from=builder /opt/bin/migrator ./
-
-# CMD ["sh", "-c", "./migrator -migrations-path=./migrations && ./app"]
-CMD ["sh", "-c", "./app"]
+ENTRYPOINT ["/usr/local/bin/server"]
