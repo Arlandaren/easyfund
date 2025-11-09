@@ -1,0 +1,551 @@
+.new-application {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1355px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem 2.5rem 3.5rem;
+  background: linear-gradient(180deg, rgba(242, 246, 248, 0.85) 0%, #ffffff 65%);
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(15, 50, 90, 0.08);
+}
+
+.new-application__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.new-application__title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #082131;
+}
+
+.new-application__subtitle {
+  margin: 0.5rem 0 0;
+  color: #4a5568;
+  font-size: 0.95rem;
+  max-width: 660px;
+}
+
+.new-application__alert {
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.new-application__alert--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.new-application__alert--success {
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #047857;
+}
+
+.new-application__templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.new-application__template-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  border-radius: 20px;
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.new-application__template-card--selected {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(17, 99, 170, 0.12);
+}
+
+.new-application__template-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #082131;
+}
+
+.new-application__template-description {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  flex: 1 1 auto;
+}
+
+.new-application__template-action {
+  align-self: flex-start;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 156, 244, 0.35);
+  background: #ffffff;
+  color: #189cf4;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-application__template-action.is-active,
+.new-application__template-action:hover {
+  background: linear-gradient(135deg, rgba(24, 156, 244, 0.12) 0%, rgba(24, 156, 244, 0.32) 100%);
+  color: #082131;
+  border-color: transparent;
+}
+
+.new-application__template-badge {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(24, 156, 244, 0.12);
+  color: #0c4a6e;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.new-application__body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.new-application__column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.new-application__form-card,
+.new-application__banks-card,
+.new-application__history-card {
+  border-radius: 20px;
+  padding: 1.75rem;
+}
+
+.new-application__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.new-application__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.new-application__chips-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #082131;
+}
+
+.new-application__slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.new-application__slider input[type='range'] {
+  width: 100%;
+  accent-color: #189cf4;
+}
+
+.new-application__slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.new-application__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: #f2f6f8;
+}
+
+.new-application__summary-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.new-application__summary-value {
+  font-size: 1.05rem;
+  color: #082131;
+}
+
+.new-application__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.new-application__banks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.new-application__section-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #082131;
+}
+
+.new-application__section-subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.new-application__banks-filter {
+  margin-bottom: 1.25rem;
+}
+
+.new-application__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.new-application__chips--products {
+  margin-top: 0.5rem;
+}
+
+.new-application__chip {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-application__chip:hover {
+  border-color: #189cf4;
+  color: #189cf4;
+}
+
+.new-application__chip.is-active {
+  background: linear-gradient(135deg, #189cf4 0%, #38bdf8 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(24, 156, 244, 0.24);
+}
+
+.new-application__banks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.new-application__banks-placeholder {
+  padding: 1rem;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #475569;
+  text-align: center;
+}
+
+.new-application__bank {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.new-application__bank--selected {
+  border-color: #189cf4;
+  box-shadow: 0 12px 28px rgba(24, 156, 244, 0.12);
+}
+
+.new-application__bank-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.new-application__bank-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.new-application__bank-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 34, 58, 0.08);
+  padding: 0.35rem;
+}
+
+.new-application__bank-name {
+  font-weight: 600;
+  color: #082131;
+}
+
+.new-application__bank-code {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.new-application__bank-rate {
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.new-application__bank-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(24, 156, 244, 0.16);
+  color: #0c4a6e;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.new-application__bank-fields {
+  display: flex;
+  gap: 1rem;
+}
+
+.new-application__bank-progress {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.new-application__bank-progress-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(24, 156, 244, 0.15) 0%, rgba(24, 156, 244, 0.02) 100%);
+  position: relative;
+}
+
+.new-application__bank-progress-fill {
+  position: absolute;
+  inset: 0;
+  width: 55%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #189cf4 0%, #38bdf8 100%);
+}
+
+.new-application__bank-progress-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.new-application__history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.new-application__history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.new-application__history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+.new-application__history-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.new-application__history-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 34, 58, 0.08);
+  padding: 0.35rem;
+}
+
+.new-application__history-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #475569;
+}
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.new-application__history-item:last-child {
+  border-bottom: none;
+}
+
+.new-application__history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.new-application__history-title {
+  font-weight: 600;
+  color: #082131;
+}
+
+.new-application__history-bank {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.new-application__history-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.new-application__history-amount {
+  font-weight: 600;
+  color: #082131;
+}
+
+.new-application__history-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.new-application__history-status--success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.new-application__history-status--warning {
+  background: rgba(250, 204, 21, 0.18);
+  color: #92400e;
+}
+
+.new-application__history-status--danger {
+  background: rgba(239, 68, 68, 0.14);
+  color: #b91c1c;
+}
+
+.new-application__history-status--info {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+.new-application__history-status--neutral {
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+}
+
+.new-application__history-placeholder,
+.new-application__history-empty {
+  padding: 1rem;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #475569;
+  text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .new-application__body {
+    grid-template-columns: 1fr;
+  }
+
+  .new-application__history-card {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .new-application__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .new-application__templates {
+    grid-template-columns: 1fr;
+  }
+
+  .new-application__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .new-application__bank-fields {
+    flex-direction: column;
+  }
+
+  .new-application__chips {
+    gap: 0.5rem;
+  }
+}
+
+
