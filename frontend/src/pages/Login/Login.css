@@ -9,6 +9,8 @@
   justify-content: center;
   padding: 2rem;
   overflow: hidden;
+  box-sizing: border-box;
+  gap: 1.5rem;
 }
 
 .login-page__background {
@@ -196,7 +198,7 @@
   gap: 0.75rem;
 }
 
-.login-page__gosuslugi-btn {
+.login-page__social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,12 +215,12 @@
   font-family: inherit;
 }
 
-.login-page__gosuslugi-btn:hover {
+.login-page__social-btn:hover {
   border-color: #189CF4;
   background-color: #F9FBFD;
 }
 
-.login-page__gosuslugi-logo {
+.login-page__social-logo {
   width: 24px;
   height: 24px;
   object-fit: contain;
@@ -226,15 +228,14 @@
 
 /* Footer */
 .login-page__footer {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: center;
 }
 
 .login-page__footer-logo {
-  height: 60px;
+  height: 54px;
   width: auto;
   object-fit: contain;
 }

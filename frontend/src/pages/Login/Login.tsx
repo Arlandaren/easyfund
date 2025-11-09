@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Input } from '../../components';
 import { useAuth } from '../../context/AuthContext';
+import dicesImg from '../../utils/img/dices.png';
 import gosuslugiLogo from '../../utils/img/gosuslugi-logo.png';
+import maxLogo from '../../utils/img/Max_logo_2025.png';
+import pochtaLogo from '../../utils/img/pochta-logo.png';
 import easyfundLogo from '../../utils/img/easyfund-logo.png';
 import './Login.css';
 
@@ -45,6 +48,45 @@ export const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const socialLogins = [
+    {
+      id: 'random-user',
+      label: 'Случайный пользователь',
+      icon: dicesImg,
+      alt: 'Случайный пользователь',
+      onClick: () => {
+        console.log('Random user login clicked');
+      },
+    },
+    {
+      id: 'gosuslugi',
+      label: 'Госуслуги',
+      icon: gosuslugiLogo,
+      alt: 'Госуслуги',
+      onClick: () => {
+        console.log('Gosuslugi login clicked');
+      },
+    },
+    {
+      id: 'max',
+      label: 'Макс',
+      icon: maxLogo,
+      alt: 'Банк Макс',
+      onClick: () => {
+        console.log('Max login clicked');
+      },
+    },
+    {
+      id: 'pochta',
+      label: 'Почта',
+      icon: pochtaLogo,
+      alt: 'Почта банк',
+      onClick: () => {
+        console.log('Pochta login clicked');
+      },
+    },
+  ];
 
   return (
     <div className="login-page">
@@ -132,25 +174,20 @@ export const Login: React.FC = () => {
         <div className="login-page__social">
           <p className="login-page__social-text">Или войдите с помощью</p>
           <div className="login-page__social-buttons">
-            {[1, 2, 3, 4].map((i) => (
+            {socialLogins.map(({ id, label, icon, alt, onClick }) => (
               <button
-                key={i}
+                key={id}
                 type="button"
-                className="login-page__gosuslugi-btn"
-                onClick={() => {
-                  // Handle Gosuslugi login
-                  console.log('Gosuslugi login clicked');
-                }}
+                className="login-page__social-btn"
+                onClick={onClick}
               >
-                <img src={gosuslugiLogo} alt="Госуслуги" className="login-page__gosuslugi-logo" />
-                <span>Госуслуги</span>
+                <img src={icon} alt={alt} className="login-page__social-logo" />
+                <span>{label}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
-
-      {/* Footer logo */}
       <div className="login-page__footer">
         <img src={easyfundLogo} alt="EasyFund" className="login-page__footer-logo" />
       </div>
