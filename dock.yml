@@ -20,7 +20,7 @@ components:
     User:
       type: object
       properties:
-        user_id: { type: string, format: uuid }
+        user_id: { type: integer, format: int64 }
         full_name: { type: string }
         email: { type: string, format: email }
         phone: { type: string }
@@ -54,7 +54,7 @@ components:
     UserBankAccount:
       type: object
       properties:
-        user_id: { type: string, format: uuid }
+        user_id: { type: integer, format: int64 }
         bank_id: { type: integer, format: int32 }
         balance: { type: string, example: "12345.67" }
         currency: { type: string, example: "RUB" }
@@ -63,7 +63,7 @@ components:
     BalanceSummary:
       type: object
       properties:
-        user_id: { type: string, format: uuid }
+        user_id: { type: integer, format: int64 }
         total_balance: { type: string, example: "98765.43" }
         currency: { type: string, example: "RUB" }
         by_bank:
@@ -78,7 +78,7 @@ components:
       type: object
       properties:
         transaction_id: { type: integer, format: int64 }
-        user_id: { type: string, format: uuid }
+        user_id: { type: integer, format: int64 }
         bank_id: { type: integer, format: int32 }
         occurred_at: { type: string, format: date-time }
         amount: { type: string, example: "-1234.50" }
@@ -88,8 +88,8 @@ components:
     Loan:
       type: object
       properties:
-        loan_id: { type: string }  # uuid или serial по вашей схеме
-        user_id: { type: string, format: uuid }
+        loan_id: { type: integer, format: int64 }
+        user_id: { type: integer, format: int64 }
         amount: { type: string, example: "200000.00" }
         rate: { type: string, example: "14.90" }
         months: { type: integer, example: 24 }
@@ -99,8 +99,8 @@ components:
     LoanPayment:
       type: object
       properties:
-        payment_id: { type: string, nullable: true } # если есть явный PK
-        loan_id: { type: string }
+        payment_id: { type: integer, format: int64, nullable: true }
+        loan_id: { type: integer, format: int64 }
         amount: { type: string, example: "10000.00" }
         paid_at: { type: string, format: date-time }
         method: { type: string, example: "card" }
@@ -109,8 +109,8 @@ components:
     Application:
       type: object
       properties:
-        application_id: { type: string }
-        user_id: { type: string, format: uuid }
+        application_id: { type: integer, format: int64 }
+        user_id: { type: integer, format: int64 }
         amount: { type: string, example: "150000.00" }
         term_months: { type: integer, example: 24 }
         purpose: { type: string, example: "Demo application" }
@@ -197,7 +197,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  user_id: { type: string, nullable: true }
+                  user_id: { type: integer, format: int64, nullable: true }
                   full_name: { type: string }
                   email: { type: string }
                   demo_password: { type: string, nullable: true }
@@ -211,7 +211,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Пользователь
@@ -230,7 +230,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Массив счетов
@@ -250,7 +250,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Сводный баланс
@@ -268,7 +268,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
         - in: query
           name: bank_id
           required: false
@@ -307,7 +307,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
         - in: path
           name: bank_id
           required: true
@@ -331,7 +331,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Массив кредитов
@@ -355,7 +355,7 @@ paths:
               type: object
               required: [user_id, amount, rate, months]
               properties:
-                user_id: { type: string, format: uuid }
+                user_id: { type: integer, format: int64 }
                 amount: { type: number, format: float }
                 rate: { type: number, format: float }
                 months: { type: integer }
@@ -377,7 +377,7 @@ paths:
         - in: path
           name: loan_id
           required: true
-          schema: { type: string }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Кредит (возможно с платежами)
@@ -403,7 +403,7 @@ paths:
         - in: path
           name: loan_id
           required: true
-          schema: { type: string }
+          schema: { type: integer, format: int64 }
       requestBody:
         required: true
         content:
@@ -433,7 +433,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Итоговый долг
@@ -442,14 +442,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  user_id: { type: string, format: uuid }
+                  user_id: { type: integer, format: int64 }
                   total_debt: { type: string, example: "180000.00" }
                   by_loan:
                     type: array
                     items:
                       type: object
                       properties:
-                        loan_id: { type: string }
+                        loan_id: { type: integer, format: int64 }
                         outstanding: { type: string }
         '401': { description: Не авторизован }
 
@@ -478,7 +478,7 @@ paths:
               type: object
               required: [user_id, amount, term_months, purpose]
               properties:
-                user_id: { type: string, format: uuid }
+                user_id: { type: integer, format: int64 }
                 amount: { type: number, format: float }
                 term_months: { type: integer }
                 purpose: { type: string }
@@ -500,7 +500,7 @@ paths:
         - in: path
           name: user_id
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Массив заявок пользователя
@@ -520,7 +520,7 @@ paths:
         - in: path
           name: application_id
           required: true
-          schema: { type: string }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Заявка одобрена
@@ -539,7 +539,7 @@ paths:
         - in: path
           name: application_id
           required: true
-          schema: { type: string }
+          schema: { type: integer, format: int64 }
       responses:
         '200':
           description: Заявка отклонена

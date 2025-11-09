@@ -10,7 +10,14 @@ import {
   ProgressSection,
   CreditRatingSection,
 } from './components';
-import { DashboardData, BalanceSummary, UserDebt, ApiLoan, ApiTransaction, ApiApplication } from './types';
+import {
+  DashboardData,
+  BalanceSummary,
+  UserDebt,
+  ApiLoan,
+  ApiTransaction,
+  ApiApplication,
+} from './types';
 import { dashboardAPI } from '../../utils/api';
 import easyfundLogoSvg from '../../utils/img/easyfund-logo.svg';
 import profileImage from '../../utils/img/profile.png';
@@ -27,15 +34,15 @@ export const Dashboard: React.FC = () => {
 
   // Fallback data
   const defaultData: DashboardData = {
-    accountBalance: 214543,
-    totalDebt: 2314593,
-    creditCount: 2,
-    creditCardCount: 6,
+    accountBalance: 0,
+    totalDebt: 0,
+    creditCount: 0,
+    creditCardCount: 0,
     progress: {
-      currentDebt: 1314593,
-      initialDebt: 2314593,
+      currentDebt: 0,
+      initialDebt: 0,
       targetDebt: 0,
-      percentage: 43,
+      percentage: 0,
     },
     creditRating: {
       score: 645,
@@ -43,83 +50,9 @@ export const Dashboard: React.FC = () => {
       max: 850,
       labels: ['Низкий', 'Неплохой', 'Хороший', 'Отличный'],
     },
-    payments: [
-      {
-        id: 1,
-        title: 'Кредитная карта Platinum',
-        dueDate: 'Ближайший платеж 14 октября',
-        amount: '3 554 ₽',
-      },
-      {
-        id: 2,
-        title: 'Кредитная карта Сбербанк',
-        dueDate: 'Ближайший платеж завтра',
-        amount: '12 456 ₽',
-      },
-      {
-        id: 3,
-        title: 'Кредит наличными ВТБ',
-        dueDate: 'Ближайший платеж сегодня',
-        amount: '7 345 ₽',
-      },
-      {
-        id: 4,
-        title: 'Кредит онлайн Альфа-Банк',
-        dueDate: 'Ближайший платеж 2 сентября',
-        amount: '145 554 ₽',
-      },
-      {
-        id: 5,
-        title: 'Денежная рассрочка от Т-Банк',
-        dueDate: 'Ближайший платеж 9 ноября',
-        amount: '2 100 ₽',
-      },
-      {
-        id: 6,
-        title: 'Кредит взаймы Сбербанк',
-        dueDate: 'Ближайший платеж послезавтра',
-        amount: '44 555 ₽',
-      },
-    ],
-    transactions: [
-      {
-        id: 1,
-        company: 'ООО "Автозаводская"',
-        title: 'Магазин у дома',
-        amount: '12 200 ₽',
-        isPositive: false,
-      },
-      {
-        id: 2,
-        company: 'ООО "Автозаводская"',
-        title: 'Магазин у дома',
-        amount: '12 200 ₽',
-        isPositive: false,
-      },
-      {
-        id: 3,
-        title: 'Зачисление ЗП',
-        amount: '+33 200 ₽',
-        isPositive: true,
-      },
-      {
-        id: 4,
-        title: 'Подписка Яндекс',
-        amount: '-399 ₽',
-        isPositive: false,
-      },
-      {
-        id: 5,
-        title: 'Подписка Яндекс',
-        amount: '-399 ₽',
-        isPositive: false,
-      },
-    ],
-    debtsByBank: [
-      { id: 1, bankName: 'ВТБ', amount: 213123, color: '#5218f4' },
-      { id: 2, bankName: 'Сбербанк', amount: 650000, color: '#d081e4' },
-      { id: 3, bankName: 'Альфа-Банк', amount: 180000, color: '#189CF4' },
-    ],
+    payments: [],
+    transactions: [],
+    debtsByBank: [],
   };
 
   useEffect(() => {
@@ -148,7 +81,7 @@ export const Dashboard: React.FC = () => {
     navigate('/login');
   };
 
-  // Helper function to safely convert any value to string
+  // Helper functions
   const safeToString = (value: any): string => {
     if (value === null || value === undefined) return '';
     if (typeof value === 'string') return value;
@@ -156,12 +89,13 @@ export const Dashboard: React.FC = () => {
     return String(value);
   };
 
-  // Helper function to safely parse float
   const safeParseFloat = (value: any): number => {
     if (value === null || value === undefined) return 0;
     const num = parseFloat(safeToString(value));
     return isNaN(num) ? 0 : num;
   };
+
+  const normalizeArray = <T,>(x: T[] | null | undefined): T[] => (Array.isArray(x) ? x : []);
 
   const fetchDashboardData = async () => {
     if (!user?.user_id) {
@@ -169,7 +103,7 @@ export const Dashboard: React.FC = () => {
       setTimeout(() => {
         setDashboardData(defaultData);
         setLoading(false);
-      }, 500);
+      }, 300);
       return;
     }
 
@@ -178,47 +112,58 @@ export const Dashboard: React.FC = () => {
       setError(null);
       console.log('🔄 Fetching dashboard data for user:', user.user_id);
 
-      // REAL API CALLS - собираем данные из разных эндпоинтов
-      const [balanceResponse, debtResponse, loansResponse, transactionsResponse, applicationsResponse] = 
-        await dashboardAPI.getDashboardData(user.user_id);
+      // Получаем все данные без ограничения по транзакциям
+      const [balanceResponse, debtResponse, loansResponse, transactionsResponse, applicationsResponse] =
+        await dashboardAPI.getFullDashboardData(user.user_id);
 
-      // Добавляем проверки на null и undefined
+      // Normalize responses
       const balanceData: BalanceSummary = balanceResponse?.data || {
         user_id: user.user_id,
-        total_balance: "0",
-        currency: "RUB",
-        by_bank: []
+        total_balance: '0',
+        currency: 'RUB',
+        by_bank: [],
       };
 
       const debtData: UserDebt = debtResponse?.data || {
         user_id: user.user_id,
-        total_debt: "0",
-        by_loan: []
+        total_debt: '0',
+        by_loan: [],
       };
 
-      const loansData: ApiLoan[] = Array.isArray(loansResponse?.data) ? loansResponse.data : [];
-      const transactionsData: ApiTransaction[] = Array.isArray(transactionsResponse?.data) ? transactionsResponse.data : [];
-      const applicationsData: ApiApplication[] = Array.isArray(applicationsResponse?.data) ? applicationsResponse.data : [];
+      const loansData: ApiLoan[] = normalizeArray<ApiLoan>(loansResponse?.data);
+
+      // Правильное извлечение массива транзакций из объекта { transactions, total_spent }
+      const txArraySource = transactionsResponse?.data?.transactions;
+      const txArray: ApiTransaction[] = Array.isArray(txArraySource) ? txArraySource : [];
+
+      const applicationsData: ApiApplication[] = normalizeArray<ApiApplication>(
+        applicationsResponse?.data
+      );
+
+      console.log('✅ API raw transactions length:', Array.isArray(txArraySource) ? txArraySource.length : 0);
 
       console.log('✅ API data received:', {
         balance: balanceData,
         debt: debtData,
         loans: loansData.length,
-        transactions: transactionsData.length,
-        applications: applicationsData.length
+        transactions: txArray.length,
+        applications: applicationsData.length,
+        transactionsSample: txArray.slice(0, 3) // Показываем первые 3 транзакции для отладки
       });
 
       // Transform API data to frontend format
+      const totalDebtAmount = safeParseFloat(debtData.total_debt);
+
       const transformedData: DashboardData = {
         accountBalance: safeParseFloat(balanceData.total_balance),
-        totalDebt: safeParseFloat(debtData.total_debt),
+        totalDebt: totalDebtAmount,
         creditCount: loansData.length,
-        creditCardCount: applicationsData.filter(app => app.status === 'active').length,
+        creditCardCount: applicationsData.filter((app) => app.status === 'active').length,
         progress: {
-          currentDebt: safeParseFloat(debtData.total_debt) * 0.6 || 1314593,
-          initialDebt: safeParseFloat(debtData.total_debt) || 2314593,
+          currentDebt: totalDebtAmount * 0.6,
+          initialDebt: totalDebtAmount,
           targetDebt: 0,
-          percentage: 43,
+          percentage: totalDebtAmount > 0 ? 60 : 0,
         },
         creditRating: {
           score: 645,
@@ -226,25 +171,26 @@ export const Dashboard: React.FC = () => {
           max: 850,
           labels: ['Низкий', 'Неплохой', 'Хороший', 'Отличный'],
         },
-        payments: loansData.slice(0, 6).map((loan, index) => {
-          const loanId = safeToString(loan.loan_id);
-          const loanAmount = safeParseFloat(loan.amount);
-          const loanMonths = typeof loan.months === 'number' ? loan.months : 1;
-          
+        payments: loansData.map((loan, index) => ({
+          id: index + 1,
+          title: `Кредит #${loan.loan_id ?? index + 1}`,
+          dueDate: 'Ближайший платеж скоро',
+          amount: safeToString(loan.amount || '0'),
+        })),
+        // ✅ ВСЕ транзакции пользователя
+        transactions: txArray.map((transaction) => {
+          const amountStr = safeToString(transaction.amount);
+          const amountNum = safeParseFloat(amountStr);
           return {
-            id: index + 1,
-            title: `Кредит ${loanId.slice(0, 8)}`,
-            dueDate: 'Ближайший платеж скоро',
-            amount: `${Math.round(loanAmount / loanMonths)} ₽`,
+            id: transaction.transaction_id,
+            title: transaction.description || 'Транзакция',
+            amount: amountStr,
+            isPositive: amountNum > 0,
+            company: transaction.category || 'Unknown',
+            occurredAt: transaction.occurred_at,
+            bankId: transaction.bank_id,
           };
         }),
-        transactions: transactionsData.slice(0, 5).map((transaction, index) => ({
-          id: transaction.transaction_id || index + 1,
-          title: transaction.description || 'Транзакция',
-          amount: transaction.amount || '0 ₽',
-          isPositive: safeParseFloat(transaction.amount) > 0,
-          company: transaction.category || 'Unknown',
-        })),
         debtsByBank: [
           { id: 1, bankName: 'ВТБ', amount: 213123, color: '#5218f4' },
           { id: 2, bankName: 'Сбербанк', amount: 650000, color: '#d081e4' },
@@ -252,19 +198,22 @@ export const Dashboard: React.FC = () => {
         ],
       };
 
+      console.log('📊 Transformed data:', {
+        transactionsCount: transformedData.transactions.length,
+        paymentsCount: transformedData.payments.length,
+        firstTransaction: transformedData.transactions[0],
+        lastTransaction: transformedData.transactions[transformedData.transactions.length - 1]
+      });
+
       setDashboardData(transformedData);
       setLoading(false);
-
-    } catch (error) {
-      console.error('❌ Error fetching dashboard data:', error);
+    } catch (err) {
+      console.error('❌ Error fetching dashboard data:', err);
       setError('Не удалось загрузить данные с сервера');
-      
-      // Fallback to mock data
-      console.log('🔄 Using fallback mock data');
       setTimeout(() => {
         setDashboardData(defaultData);
         setLoading(false);
-      }, 500);
+      }, 300);
     }
   };
 
@@ -299,7 +248,7 @@ export const Dashboard: React.FC = () => {
       <div className="dashboard__container">
         {/* Background */}
         <div className="dashboard__background" />
-        
+
         {/* Header */}
         <header className="dashboard__header">
           <button
@@ -308,11 +257,7 @@ export const Dashboard: React.FC = () => {
             type="button"
             aria-label="Go to dashboard"
           >
-            <img
-              className="dashboard__logo"
-              alt="EasyFund Logo"
-              src={easyfundLogoSvg}
-            />
+            <img className="dashboard__logo" alt="EasyFund Logo" src={easyfundLogoSvg} />
           </button>
           <div className="dashboard__header-actions">
             <button className="dashboard__header-icon" type="button" aria-label="Search">
@@ -363,7 +308,6 @@ export const Dashboard: React.FC = () => {
                     className="dashboard__dropdown-item"
                     onClick={() => {
                       setDropdownOpen(false);
-                      console.log('Navigate to profile');
                     }}
                     type="button"
                   >
@@ -385,38 +329,43 @@ export const Dashboard: React.FC = () => {
           </div>
         </header>
 
-      {/* Greeting */}
-      <h1 className="dashboard__greeting">Добрый день, {userName}!</h1>
+        {/* Greeting */}
+        <h1 className="dashboard__greeting">Добрый день, {userName}!</h1>
 
-      {/* Sections */}
-      <CreditScoreSection
-        accountBalance={dashboardData.accountBalance}
-        onTransfer={() => console.log('Transfer clicked')}
-        onTopUp={() => console.log('Top up clicked')}
-      />
+        {/* Main Sections */}
+        <div className="dashboard__sections">
+          <CreditScoreSection
+            accountBalance={dashboardData.accountBalance}
+            onTransfer={() => console.log('Transfer clicked')}
+            onTopUp={() => console.log('Top up clicked')}
+          />
 
-      <PaymentHistorySection
-        totalDebt={dashboardData.totalDebt}
-        creditCount={dashboardData.creditCount}
-        creditCardCount={dashboardData.creditCardCount}
-        onViewAllProducts={() => navigate('/applications')}
-      />
+          <PaymentHistorySection
+            totalDebt={dashboardData.totalDebt}
+            creditCount={dashboardData.creditCount}
+            creditCardCount={dashboardData.creditCardCount}
+            onViewAllProducts={() => navigate('/applications')}
+          />
 
-      <DebtOverviewSection
-        transactions={dashboardData.transactions}
-        onFilterChange={(filter) => console.log('Filter changed:', filter)}
-      />
+          {/* История трат и Вы почти у цели в одной строке */}
+          <div className="dashboard__row">
+            <DebtOverviewSection
+              transactions={dashboardData.transactions}
+              onFilterChange={(filter: string) => console.log('Filter changed:', filter)}
+            />
 
-      <AccountSummarySection
-        payments={dashboardData.payments}
-        onViewAll={() => console.log('View all payments')}
-      />
+            <ProgressSection progress={dashboardData.progress} />
+          </div>
 
-      <FinancialGoalsSection debtsByBank={dashboardData.debtsByBank} />
+          <AccountSummarySection
+            payments={dashboardData.payments}
+            onViewAll={() => console.log('View all payments')}
+          />
 
-      <ProgressSection progress={dashboardData.progress} />
+          <FinancialGoalsSection debtsByBank={dashboardData.debtsByBank} />
 
-      <CreditRatingSection creditRating={dashboardData.creditRating} />
+          <CreditRatingSection creditRating={dashboardData.creditRating} />
+        </div>
 
         {/* Bottom Navigation */}
         <nav className="dashboard__nav" aria-label="Main navigation">

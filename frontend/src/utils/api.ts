@@ -107,12 +107,33 @@ export const healthAPI = {
 
 // Dashboard API - собираем данные из разных эндпоинтов
 export const dashboardAPI = {
+  // Старый метод с ограниченными транзакциями (для обратной совместимости)
   getDashboardData: (userId: string) => 
     Promise.all([
       accountsAPI.getUserBalance(userId),
       loansAPI.getUserDebt(userId),
       loansAPI.getUserLoans(userId),
       transactionsAPI.getUserTransactions(userId, { limit: 5 }),
+      applicationsAPI.getUserApplications(userId),
+    ]),
+  
+  // ✅ НОВЫЕ МЕТОДЫ для получения всех данных без ограничений
+  getBalanceSummary: (userId: string) => accountsAPI.getUserBalance(userId),
+  getUserDebt: (userId: string) => loansAPI.getUserDebt(userId),
+  getUserLoans: (userId: string) => loansAPI.getUserLoans(userId),
+  getUserApplications: (userId: string) => applicationsAPI.getUserApplications(userId),
+  
+  // ✅ ВАЖНО: Метод для получения ВСЕХ транзакций без ограничений
+  getUserTransactions: (userId: string, params?: any) => 
+    transactionsAPI.getUserTransactions(userId, params),
+    
+  // Метод для получения всех данных с большим лимитом транзакций
+  getFullDashboardData: (userId: string) => 
+    Promise.all([
+      accountsAPI.getUserBalance(userId),
+      loansAPI.getUserDebt(userId),
+      loansAPI.getUserLoans(userId),
+      transactionsAPI.getUserTransactions(userId, { limit: 200 }), // Увеличили лимит
       applicationsAPI.getUserApplications(userId),
     ]),
 };
