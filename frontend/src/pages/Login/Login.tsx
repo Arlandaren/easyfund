@@ -9,6 +9,14 @@ import pochtaLogo from '../../utils/img/pochta-logo.png';
 import easyfundLogo from '../../utils/img/easyfund-logo.png';
 import './Login.css';
 
+const RANDOM_USERS = [
+  { email: 'ivan@example.com', password: 'password123' },
+  { email: 'anna@example.com', password: 'password123' },
+  { email: 'pavel@example.com', password: 'password123' },
+  { email: 'olga@example.com', password: 'password123' },
+  { email: 'sergey@example.com', password: 'password123' },
+];
+
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -49,15 +57,40 @@ export const Login: React.FC = () => {
     }
   };
 
+  const handleRandomLogin = async () => {
+    if (loading) {
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    const randomUser = RANDOM_USERS[Math.floor(Math.random() * RANDOM_USERS.length)];
+
+    setFormData((prev) => ({
+      ...prev,
+      email: randomUser.email,
+      password: randomUser.password,
+    }));
+
+    try {
+      await login(randomUser.email, randomUser.password);
+      navigate('/welcome');
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Не удалось войти как случайный пользователь');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const socialLogins = [
     {
       id: 'random-user',
       label: 'Случайный пользователь',
       icon: dicesImg,
       alt: 'Случайный пользователь',
-      onClick: () => {
-        console.log('Random user login clicked');
-      },
+      onClick: handleRandomLogin,
+      isRandom: true,
     },
     {
       id: 'gosuslugi',
@@ -174,12 +207,13 @@ export const Login: React.FC = () => {
         <div className="login-page__social">
           <p className="login-page__social-text">Или войдите с помощью</p>
           <div className="login-page__social-buttons">
-            {socialLogins.map(({ id, label, icon, alt, onClick }) => (
+            {socialLogins.map(({ id, label, icon, alt, onClick, isRandom }) => (
               <button
                 key={id}
                 type="button"
-                className="login-page__social-btn"
+                className={`login-page__social-btn${isRandom ? ' login-page__social-btn--random' : ''}`}
                 onClick={onClick}
+                disabled={loading}
               >
                 <img src={icon} alt={alt} className="login-page__social-logo" />
                 <span>{label}</span>

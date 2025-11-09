@@ -215,15 +215,55 @@
   font-family: inherit;
 }
 
-.login-page__social-btn:hover {
+.login-page__social-btn:not(:disabled):hover {
   border-color: #189CF4;
   background-color: #F9FBFD;
+}
+
+.login-page__social-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-page__social-btn--random {
+  background: linear-gradient(135deg, rgba(24, 156, 244, 0.12) 0%, rgba(24, 156, 244, 0.28) 100%);
+  border-color: #189CF4;
+  color: #082131;
+  box-shadow: 0 0 0 0 rgba(24, 156, 244, 0.35);
+  animation: login-page__heartbeat 1.8s ease-in-out infinite;
+}
+
+.login-page__social-btn--random:not(:disabled):hover {
+  background: linear-gradient(135deg, rgba(24, 156, 244, 0.18) 0%, rgba(24, 156, 244, 0.32) 100%);
+}
+
+.login-page__social-btn--random:disabled {
+  animation: none;
+  box-shadow: none;
 }
 
 .login-page__social-logo {
   width: 24px;
   height: 24px;
   object-fit: contain;
+}
+
+@keyframes login-page__heartbeat {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(24, 156, 244, 0.35);
+  }
+  40% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(24, 156, 244, 0);
+  }
+  60% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(24, 156, 244, 0);
+  }
 }
 
 /* Footer */
