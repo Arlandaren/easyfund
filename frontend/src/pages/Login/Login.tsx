@@ -6,8 +6,19 @@ import dicesImg from '../../utils/img/dices.png';
 import gosuslugiLogo from '../../utils/img/gosuslugi-logo.png';
 import maxLogo from '../../utils/img/Max_logo_2025.png';
 import pochtaLogo from '../../utils/img/pochta-logo.png';
+import adminIcon from '../../utils/img/profile.png';
 import easyfundLogo from '../../utils/img/easyfund-logo.png';
 import './Login.css';
+
+type SocialLoginOption = {
+  id: string;
+  label: string;
+  icon: string;
+  alt: string;
+  onClick: () => void | Promise<void>;
+  isRandom?: boolean;
+  isAdmin?: boolean;
+};
 
 const RANDOM_USERS = [
   { email: 'ivan@example.com', password: 'password123' },
@@ -16,6 +27,8 @@ const RANDOM_USERS = [
   { email: 'olga@example.com', password: 'password123' },
   { email: 'sergey@example.com', password: 'password123' },
 ];
+
+const ADMIN_USER = { email: 'ivan@example.com', password: 'password123' };
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -83,43 +96,81 @@ export const Login: React.FC = () => {
     }
   };
 
-  const socialLogins = [
-    {
-      id: 'random-user',
-      label: 'Случайный пользователь',
-      icon: dicesImg,
-      alt: 'Случайный пользователь',
-      onClick: handleRandomLogin,
-      isRandom: true,
-    },
-    {
-      id: 'gosuslugi',
-      label: 'Госуслуги',
-      icon: gosuslugiLogo,
-      alt: 'Госуслуги',
-      onClick: () => {
-        console.log('Gosuslugi login clicked');
-      },
-    },
-    {
-      id: 'max',
-      label: 'Макс',
-      icon: maxLogo,
-      alt: 'Банк Макс',
-      onClick: () => {
-        console.log('Max login clicked');
-      },
-    },
-    {
-      id: 'pochta',
-      label: 'Почта',
-      icon: pochtaLogo,
-      alt: 'Почта банк',
-      onClick: () => {
-        console.log('Pochta login clicked');
-      },
-    },
-  ];
+  const handleAdminLogin = async () => {
+    if (loading) {
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    const { email, password } = ADMIN_USER;
+
+    setFormData((prev) => ({
+      ...prev,
+      email,
+      password,
+    }));
+
+    try {
+      await login(email, password);
+      navigate('/welcome');
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Не удалось войти как администратор');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const socialLogins: SocialLoginOption[] =
+    formData.role === 'client'
+      ? [
+          {
+            id: 'random-user',
+            label: 'Случайный пользователь',
+            icon: dicesImg,
+            alt: 'Случайный пользователь',
+            onClick: handleRandomLogin,
+            isRandom: true,
+          },
+          {
+            id: 'gosuslugi',
+            label: 'Госуслуги',
+            icon: gosuslugiLogo,
+            alt: 'Госуслуги',
+            onClick: () => {
+              console.log('Gosuslugi login clicked');
+            },
+          },
+          {
+            id: 'max',
+            label: 'Макс',
+            icon: maxLogo,
+            alt: 'Банк Макс',
+            onClick: () => {
+              console.log('Max login clicked');
+            },
+          },
+          {
+            id: 'pochta',
+            label: 'Почта',
+            icon: pochtaLogo,
+            alt: 'Почта банк',
+            onClick: () => {
+              console.log('Pochta login clicked');
+            },
+          },
+        ]
+      : [
+          {
+            id: 'admin',
+            label: 'Войти как админ',
+            icon: adminIcon,
+            alt: 'Войти как администратор',
+            onClick: handleAdminLogin,
+            isAdmin: true,
+          },
+        ];
 
   return (
     <div className="login-page">
@@ -142,9 +193,9 @@ export const Login: React.FC = () => {
               {formData.role === 'client' && <div className="login-page__role-radio-inner"></div>}
             </div>
             <div className="login-page__role-content">
-              <h3 className="login-page__role-title">Я клиент банка</h3>
+              <h3 className="login-page__role-title">Я клиент</h3>
               <p className="login-page__role-description">
-                Возможность управлять своими финансами в нашем сервисе. Использование кредитных продуктов.
+                Возможность управлять своими финансами в одном сервисе. Использование кредитных продуктов и многое другое.
               </p>
             </div>
           </div>
@@ -159,7 +210,7 @@ export const Login: React.FC = () => {
             <div className="login-page__role-content">
               <h3 className="login-page__role-title">Я сотрудник банка</h3>
               <p className="login-page__role-description">
-                Возможность управлять своими финансами в нашем сервисе. Использование кредитных продуктов.
+              Полный контроль над входящими заявками. Проверяйте статус, запрашивайте дополнительные документы и выносите решение где угодно — в офисе, в дороге или дома.
               </p>
             </div>
           </div>
@@ -170,8 +221,8 @@ export const Login: React.FC = () => {
           <Input
             type="email"
             name="email"
-            label="Почта"
-            placeholder="yanavtb@ya.ru"
+            label={formData.role === 'bank_employee' ? 'Корпоративная почта' : 'Почта'}
+            placeholder={formData.role === 'bank_employee' ? 'nastyasber@sber.ru' : 'yanavtb@ya.ru'}
             value={formData.email}
             onChange={handleChange}
             className="login-page__input"
@@ -206,12 +257,20 @@ export const Login: React.FC = () => {
         {/* Social login */}
         <div className="login-page__social">
           <p className="login-page__social-text">Или войдите с помощью</p>
-          <div className="login-page__social-buttons">
-            {socialLogins.map(({ id, label, icon, alt, onClick, isRandom }) => (
+          <div
+            className={`login-page__social-buttons${formData.role === 'bank_employee' ? ' login-page__social-buttons--single' : ''}`}
+          >
+            {socialLogins.map(({ id, label, icon, alt, onClick, isRandom, isAdmin }) => (
               <button
                 key={id}
                 type="button"
-                className={`login-page__social-btn${isRandom ? ' login-page__social-btn--random' : ''}`}
+                className={[
+                  'login-page__social-btn',
+                  isRandom ? 'login-page__social-btn--accent login-page__social-btn--random' : '',
+                  isAdmin ? 'login-page__social-btn--accent login-page__social-btn--admin' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 onClick={onClick}
                 disabled={loading}
               >
@@ -221,6 +280,12 @@ export const Login: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {formData.role === 'bank_employee' && (
+          <div className="login-page__role-note">
+            Чтобы <span>узнать свои данные</span>, обратитесь к официальному <span>представителю</span> вашего банка
+          </div>
+        )}
       </div>
       <div className="login-page__footer">
         <img src={easyfundLogo} alt="EasyFund" className="login-page__footer-logo" />

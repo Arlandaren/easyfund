@@ -225,16 +225,19 @@
   cursor: not-allowed;
 }
 
-.login-page__social-btn--random {
+.login-page__social-btn--accent {
   background: linear-gradient(135deg, rgba(24, 156, 244, 0.12) 0%, rgba(24, 156, 244, 0.28) 100%);
   border-color: #189CF4;
   color: #082131;
-  box-shadow: 0 0 0 0 rgba(24, 156, 244, 0.35);
-  animation: login-page__heartbeat 1.8s ease-in-out infinite;
 }
 
-.login-page__social-btn--random:not(:disabled):hover {
+.login-page__social-btn--accent:not(:disabled):hover {
   background: linear-gradient(135deg, rgba(24, 156, 244, 0.18) 0%, rgba(24, 156, 244, 0.32) 100%);
+}
+
+.login-page__social-btn--random {
+  box-shadow: 0 0 0 0 rgba(24, 156, 244, 0.35);
+  animation: login-page__heartbeat 1.8s ease-in-out infinite;
 }
 
 .login-page__social-btn--random:disabled {
@@ -242,10 +245,34 @@
   box-shadow: none;
 }
 
+.login-page__social-btn--admin {
+  box-shadow: 0 12px 24px -12px rgba(24, 156, 244, 0.45);
+}
+
+.login-page__social-buttons--single {
+  grid-template-columns: 1fr;
+}
+
 .login-page__social-logo {
   width: 24px;
   height: 24px;
   object-fit: contain;
+}
+
+.login-page__role-note {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #082131;
+  background: #F2F6F8;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+.login-page__role-note span {
+  color: #189CF4;
+  font-weight: 600;
 }
 
 @keyframes login-page__heartbeat {
