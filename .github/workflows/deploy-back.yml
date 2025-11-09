@@ -72,19 +72,11 @@ jobs:
       # Создание .env из base64-секрета
       - name: Create .env file
         run: |
-<<<<<<< HEAD:.github/workflows/deploy_back.yml
-          echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > ./backend/.env
-
-      # Сборка Docker-образа
-      - name: Build Docker image
-        run: docker compose --env-file=./backend/.env -f ./backend/docker-compose.yml build
-=======
           echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > .env.prod
 
       # Сборка Docker-образа
       - name: Build Docker image
         run: docker compose --env-file=.env.prod build
->>>>>>> feature/connect:.github/workflows/deploy-back.yml
 
       # Сохранение Docker-образа в tar-файл
       - name: Save Docker image
