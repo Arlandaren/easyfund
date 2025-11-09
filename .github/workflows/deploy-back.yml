@@ -8,60 +8,13 @@ on:
       - '.github/workflows/deploy-back.yml'
 
 env:
-  DEPLOY_PATH: /home/easyfund/backend
+  DEPLOY_PATH: /home/easyfund
   SERVER_DOMAIN: 147.45.147.73
   SERVER_USER: root
 
 jobs:
-  # lint:
-  #   name: Lint with golangci-lint
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: ./backend 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Setup Go
-  #       uses: actions/setup-go@v5
-  #       with:
-  #         go-version: '1.25'
-
-  #     - name: Cache Go modules
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: ~/go/pkg/mod
-  #         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }} 
-  #         restore-keys: |
-  #           ${{ runner.os }}-go-
-
-  #     - name: Download Go dependencies
-  #       run: |
-  #         go mod tidy
-  #         go mod download
-
-  #     - name: Build code
-  #       run: go build ./...
-        
-  #     - name: Install golangci-lint
-  #       run: |
-  #         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.60.1
-
-  #     - name: Cache golangci-lint
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: ~/.cache/golangci-lint
-  #         key: ${{ runner.os }}-golangci-lint-v1.60.1
-    
-  #     - name: Run golangci-lint
-  #       run: golangci-lint run --timeout=5m --verbose
-
-  # НАШ ДЕВИЗ КРИВОЙ КОД НО РАБОТАЕТ, ДОЛОЙ ЛИНТЕРЫ
-
   build_backend:
     runs-on: ubuntu-latest
-    # needs: lint
     steps:
       - uses: actions/checkout@v3
 
@@ -75,7 +28,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # Создание .env из base64-секрета
+      # Создание .env из base64-секрета в папке backend
       - name: Create .env file
         run: |
           echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > backend/.env.prod
@@ -101,38 +54,47 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no \
             ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} \
-            "mkdir -p ${{ env.DEPLOY_PATH }}"
+            "mkdir -p ${{ env.DEPLOY_PATH }}/backend"
 
       # Установка rsync
       - name: Install rsync
         run: sudo apt-get update && sudo apt-get install -y rsync
 
-      # Синхронизация файлов
-      - name: Sync files to server
+      # Синхронизация ТОЛЬКО папки backend на сервер
+      - name: Sync backend to server
         run: |
           rsync -avz --delete \
-            --exclude='.git/' \
-            --exclude='frontend/' \
-            --exclude='node_modules/' \
             -e "ssh -o StrictHostKeyChecking=no" \
-            ./ \
-            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }}:${{ env.DEPLOY_PATH }}/
+            ./backend/ \
+            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }}:${{ env.DEPLOY_PATH }}/backend/
 
-      # Запуск контейнеров на сервере
-      - name: Load Docker image and start containers
+      # Копирование образа и запуск контейнеров
+      - name: Copy image and start containers
         run: |
+          scp -o StrictHostKeyChecking=no \
+            image.tar \
+            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }}:${{ env.DEPLOY_PATH }}/backend/
+
           ssh -o StrictHostKeyChecking=no \
-            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} -p 22 "
-            cd $DEPLOY_PATH
+            ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} "
+            cd $DEPLOY_PATH/backend
+            echo 'Current directory:'
+            pwd
+            echo 'Files in directory:'
+            ls -la
+            echo 'Loading Docker image...'
             docker load -i image.tar
-            # Теперь .env.prod внутри папки backend
-            docker compose -f backend/docker-compose.prod.yml --env-file=backend/.env.prod up -d --force-recreate
+            echo 'Starting containers...'
+            # Используем правильный путь к .env.prod (текущая директория)
+            docker compose -f docker-compose.prod.yml --env-file=.env.prod up -d --force-recreate
+            echo 'Deployment completed successfully!'
           "
 
       - name: Post-deploy cleanup
         run: |
           ssh -o StrictHostKeyChecking=no \
             ${{ env.SERVER_USER }}@${{ env.SERVER_DOMAIN }} "
-            docker system prune -a -f      # Удаляем оставшийся мусор
+            cd $DEPLOY_PATH/backend
             rm -f image.tar
+            docker system prune -a -f
           "
