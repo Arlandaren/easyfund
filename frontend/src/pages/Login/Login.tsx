@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Input } from '../../components';
 import { useAuth } from '../../context/AuthContext';
+import { usersAPI } from '../../utils/api';
 import dicesImg from '../../utils/img/dices.png';
 import gosuslugiLogo from '../../utils/img/gosuslugi-logo.png';
 import maxLogo from '../../utils/img/Max_logo_2025.png';
@@ -19,14 +20,6 @@ type SocialLoginOption = {
   isRandom?: boolean;
   isAdmin?: boolean;
 };
-
-const RANDOM_USERS = [
-  { email: 'ivan@example.com', password: 'password123' },
-  { email: 'anna@example.com', password: 'password123' },
-  { email: 'pavel@example.com', password: 'password123' },
-  { email: 'olga@example.com', password: 'password123' },
-  { email: 'sergey@example.com', password: 'password123' },
-];
 
 const ADMIN_USER = { email: 'ivan@example.com', password: 'password123' };
 
@@ -78,19 +71,28 @@ export const Login: React.FC = () => {
     setError('');
     setLoading(true);
 
-    const randomUser = RANDOM_USERS[Math.floor(Math.random() * RANDOM_USERS.length)];
-
-    setFormData((prev) => ({
-      ...prev,
-      email: randomUser.email,
-      password: randomUser.password,
-    }));
-
     try {
-      await login(randomUser.email, randomUser.password);
+      const response = await usersAPI.getRandom();
+      const randomUser = response?.data;
+
+      if (!randomUser?.email) {
+        throw new Error('Некорректный ответ сервера');
+      }
+
+      const demoPassword =
+        (randomUser as { demo_password?: string }).demo_password || 'password123';
+
+      setFormData((prev) => ({
+        ...prev,
+        email: randomUser.email,
+        password: demoPassword,
+      }));
+
+      await login(randomUser.email, demoPassword);
       navigate('/welcome');
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Не удалось войти как случайный пользователь');
+      console.error('Random user login failed:', err);
+      setError(err?.response?.data?.message || err?.message || 'Не удалось войти как случайный пользователь');
     } finally {
       setLoading(false);
     }
