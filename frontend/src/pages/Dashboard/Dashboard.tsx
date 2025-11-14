@@ -228,7 +228,7 @@ export const Dashboard: React.FC = () => {
         <TopBar variant="overlay" />
 
         {/* Greeting */}
-        <h1 className="dashboard__greeting">Добрый день, {userName}!</h1>
+        <h1 className="dashboard__greeting">С возвращением, {userName}</h1>
 
         {/* Main Sections */}
         <div className="dashboard__sections">
@@ -265,40 +265,6 @@ export const Dashboard: React.FC = () => {
           <CreditRatingSection creditRating={dashboardData.creditRating} />
         </div>
 
-        {/* Bottom Navigation */}
-        <nav className="dashboard__nav" aria-label="Main navigation">
-          <div className="dashboard__nav-indicator" />
-          <button
-            className="dashboard__nav-btn dashboard__nav-btn--active"
-            aria-label="Home"
-            onClick={() => navigate('/dashboard')}
-          >
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15"
-                stroke="#FFFFFF"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            className="dashboard__nav-btn"
-            aria-label="Applications"
-            onClick={() => navigate('/applications')}
-          >
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z"
-                stroke="#082131"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </nav>
       </div>
     </div>
   );

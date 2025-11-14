@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { BottomNav } from './components';
 
 // Pages
 import { Home } from './pages/Home';
@@ -71,6 +72,7 @@ function App() {
           />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        <BottomNav />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -188,57 +188,6 @@
   pointer-events: none;
 }
 
-.dashboard__nav {
-  position: absolute;
-  bottom: 41px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 154px;
-  height: 62px;
-  background-color: #FFFFFF;
-  border-radius: 20px;
-  box-shadow: 0px 4px 24px rgba(24, 156, 244, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0 22px;
-  z-index: 10;
-}
-
-.dashboard__nav-indicator {
-  position: absolute;
-  top: 6px;
-  left: 22px;
-  width: 50px;
-  height: 50px;
-  background-color: #189CF4;
-  border-radius: 14px;
-  z-index: -1;
-  transition: left 0.3s ease;
-}
-
-.dashboard__nav-btn {
-  width: 30px;
-  height: 30px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-
-.dashboard__nav-btn svg {
-  width: 100%;
-  height: 100%;
-}
-
-.dashboard__nav-btn--active svg path {
-  stroke: #FFFFFF;
-}
-
 /* Responsive adjustments */
 @media (max-width: 1440px) {
   .dashboard {
