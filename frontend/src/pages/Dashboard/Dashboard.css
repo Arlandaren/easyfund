@@ -7,6 +7,15 @@
   overflow-y: auto;
 }
 
+.dashboard {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.dashboard::-webkit-scrollbar {
+  display: none;
+}
+
 .dashboard__container {
   position: relative;
   width: 1440px;

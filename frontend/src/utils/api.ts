@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance } from 'axios';
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
-  baseURL: '/api/v1',
+  baseURL: import.meta.env.VITE_API_URL ?? 'https://api.easyfund.aldar.space/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
