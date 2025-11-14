@@ -40,18 +40,20 @@
   height: 22px;
   align-items: center;
   justify-content: center;
-  background-color: #FFFFFF;
-  border: 1px solid #C2C2C2;
-  border-radius: 14px;
+  background-color: rgba(24, 156, 244, 0.08);
+  border: 1px solid #189CF4;
+  border-radius: 10px;
   font-family: 'Inter', sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 10px;
-  color: #C2C2C2;
+  color: #189CF4;
   cursor: pointer;
   padding: 0;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .debt-overview-section__filter:hover {
+  background-color: rgba(24, 156, 244, 0.18);
   border-color: #189CF4;
   color: #189CF4;
 }

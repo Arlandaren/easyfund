@@ -4,10 +4,12 @@ import './ProgressSection.css';
 
 interface ProgressSectionProps {
   progress: ProgressData;
+  totalDebt: number;
 }
 
 export const ProgressSection: React.FC<ProgressSectionProps> = ({
   progress,
+  totalDebt,
 }) => {
   const formatAmount = (amount: number): string => {
     return new Intl.NumberFormat('ru-RU', {
@@ -18,18 +20,25 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
     }).format(amount);
   };
 
-  // Calculate progress bar width (max 268px)
-  const progressWidth = Math.min(268, (progress.percentage / 100) * 268);
+  const hasDebt = totalDebt > 0;
+  const paidPercentage = hasDebt ? 40 : 0; // Temporary stub until backend data arrives
+  const progressWidth = Math.min(268, (paidPercentage / 100) * 268);
 
   return (
     <section className="progress-section">
-      <h2 className="progress-section__title">Вы почти у цели!</h2>
+      <h2 className="progress-section__title">
+        {hasDebt ? 'Вы почти у цели!' : 'У вас нет задолженностей'}
+      </h2>
       <p className="progress-section__description">
         Благодаря своим усилиям, вы почти
         <br />
         закрыли свои задолженности
       </p>
       
+      <div className="progress-section__progress-info">
+        <div className="progress-section__progress-percentage">{paidPercentage}%</div>
+      </div>
+
       <div className="progress-section__progress-container">
         <div className="progress-section__progress-bar-bg">
           <div
@@ -38,11 +47,11 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
           />
         </div>
         <div className="progress-section__progress-labels">
-          <span className="progress-section__progress-label">{formatAmount(progress.initialDebt)}</span>
-          <span className="progress-section__progress-label">{formatAmount(progress.currentDebt)}</span>
-          <span className="progress-section__progress-label">{formatAmount(progress.targetDebt)}</span>
+          <span className="progress-section__progress-label">{formatAmount(0)}</span>
+          <span className="progress-section__progress-label">
+            {formatAmount(hasDebt ? totalDebt : 0)}
+          </span>
         </div>
-        <div className="progress-section__progress-percentage">{progress.percentage}%</div>
       </div>
       
       <div className="progress-section__encouragement">Дальше - больше!</div>

@@ -128,7 +128,19 @@ export const Dashboard: React.FC = () => {
       });
 
       // Transform API data to frontend format
-      const totalDebtAmount = safeParseFloat(debtData.total_debt);
+      let totalDebtAmount = safeParseFloat(debtData.total_debt);
+      if (totalDebtAmount === 0 && loansData.length > 0) {
+        totalDebtAmount = loansData.reduce((sum, loan) => {
+          const loanData = loan as any;
+          const remaining = safeParseFloat(
+            loanData?.remaining_balance ?? loanData?.remaining_amount ?? loanData?.outstanding
+          );
+          const fallbackAmount = safeParseFloat(
+            loan.amount ?? loanData?.original_amount ?? loanData?.requested_amount ?? loanData?.principal
+          );
+          return sum + (remaining > 0 ? remaining : fallbackAmount);
+        }, 0);
+      }
 
       const transformedData: DashboardData = {
         accountBalance: safeParseFloat(balanceData.total_balance),
@@ -252,7 +264,7 @@ export const Dashboard: React.FC = () => {
               onFilterChange={(filter: string) => console.log('Filter changed:', filter)}
             />
 
-            <ProgressSection progress={dashboardData.progress} />
+            <ProgressSection progress={dashboardData.progress} totalDebt={dashboardData.totalDebt} />
           </div>
 
           <AccountSummarySection
