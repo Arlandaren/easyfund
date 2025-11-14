@@ -17,6 +17,7 @@ import {
   ApiLoan,
   ApiTransaction,
   ApiApplication,
+  DebtItem,
 } from './types';
 import { dashboardAPI } from '../../utils/api';
 import { TopBar } from '../../components';
@@ -142,6 +143,14 @@ export const Dashboard: React.FC = () => {
         }, 0);
       }
 
+      const debtsByBankMock: DebtItem[] = [
+        { id: 1, bankName: 'Т-Банк', amount: totalDebtAmount * 0.1, color: '#FFDE34' },
+        { id: 2, bankName: 'ВТБ', amount: totalDebtAmount * 0.2, color: '#002782' },
+        { id: 3, bankName: 'Сбербанк', amount: totalDebtAmount * 0.3, color: '#046A38' },
+        { id: 4, bankName: 'Альфа-Банк', amount: totalDebtAmount * 0.1, color: '#EF3125' },
+        { id: 5, bankName: 'ОТП Банк', amount: totalDebtAmount * 0.3, color: '#C2FF05' },
+      ];
+
       const transformedData: DashboardData = {
         accountBalance: safeParseFloat(balanceData.total_balance),
         totalDebt: totalDebtAmount,
@@ -179,11 +188,7 @@ export const Dashboard: React.FC = () => {
             bankId: transaction.bank_id,
           };
         }),
-        debtsByBank: [
-          { id: 1, bankName: 'ВТБ', amount: 213123, color: '#5218f4' },
-          { id: 2, bankName: 'Сбербанк', amount: 650000, color: '#d081e4' },
-          { id: 3, bankName: 'Альфа-Банк', amount: 180000, color: '#189CF4' },
-        ],
+        debtsByBank: debtsByBankMock,
       };
 
       console.log('📊 Transformed data:', {

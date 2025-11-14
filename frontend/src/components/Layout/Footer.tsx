@@ -6,7 +6,7 @@ export const Footer: React.FC = () => {
     <footer className="footer">
       <div className="footer__container">
         <p className="footer__text">
-          © 2024 EasyFund. All rights reserved.
+          © 2025 EasyFund. All rights reserved.
         </p>
       </div>
     </footer>

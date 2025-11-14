@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout, Card, Button, Input } from '../../components';
 import { useAuth } from '../../context/AuthContext';
@@ -28,7 +28,9 @@ export const ApplicationsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user?.user_id) {
@@ -39,6 +41,30 @@ export const ApplicationsList: React.FC = () => {
   useEffect(() => {
     filterApplications();
   }, [applications, searchTerm, filterStatus]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setStatusMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const statusOptions = [
+    { value: '', label: 'Выберите статус', disabled: true },
+    { value: 'all', label: 'Все статусы' },
+    { value: 'active', label: 'Активный' },
+    { value: 'pending', label: 'На рассмотрении' },
+    { value: 'approved', label: 'Одобрено' },
+    { value: 'rejected', label: 'Отклонено' },
+    { value: 'completed', label: 'Завершено' },
+  ];
 
   const fetchApplications = async () => {
     if (!user?.user_id) return;
@@ -104,7 +130,7 @@ export const ApplicationsList: React.FC = () => {
       );
     }
 
-    if (filterStatus !== 'all') {
+    if (filterStatus && filterStatus !== 'all') {
       filtered = filtered.filter((app) => app.status === filterStatus);
     }
 
@@ -176,18 +202,56 @@ export const ApplicationsList: React.FC = () => {
             className="applications-search"
           />
 
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="applications-select"
+          <div
+            className={`applications-select ${filterStatus ? '' : 'applications-select--placeholder'}`}
+            onClick={() => setStatusMenuOpen((prev) => !prev)}
+            ref={statusDropdownRef}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setStatusMenuOpen((prev) => !prev);
+              }
+            }}
+            aria-haspopup="listbox"
+            aria-expanded={statusMenuOpen}
           >
-            <option value="all">Все статусы</option>
-            <option value="active">Активный</option>
-            <option value="pending">На рассмотрении</option>
-            <option value="approved">Одобрено</option>
-            <option value="rejected">Отклонено</option>
-            <option value="completed">Завершено</option>
-          </select>
+            <span>
+              {statusOptions.find((opt) => opt.value === filterStatus)?.label || 'Выберите статус'}
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 9L12 15L18 9"
+                stroke="#082131"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {statusMenuOpen && (
+              <ul className="applications-select__menu" role="listbox">
+                {statusOptions.map((option) => (
+                  <li
+                    key={option.value}
+                    className={`applications-select__option ${
+                      filterStatus === option.value ? 'applications-select__option--selected' : ''
+                    } ${option.disabled ? 'applications-select__option--disabled' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (option.disabled) return;
+                      setFilterStatus(option.value);
+                      setStatusMenuOpen(false);
+                    }}
+                    role="option"
+                    aria-selected={filterStatus === option.value}
+                  >
+                    {option.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {filteredApplications.length === 0 ? (
