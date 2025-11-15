@@ -21,7 +21,11 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
   };
 
   const hasDebt = totalDebt > 0;
-  const paidPercentage = hasDebt ? 40 : 0; // Temporary stub until backend data arrives
+  const fallbackPercentage =
+    typeof progress?.percentage === 'number' ? progress.percentage : 40;
+  const paidPercentage = hasDebt
+    ? Math.max(0, Math.min(100, fallbackPercentage))
+    : 0;
   const progressWidth = Math.min(268, (paidPercentage / 100) * 268);
 
   return (

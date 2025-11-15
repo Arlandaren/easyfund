@@ -21,13 +21,13 @@
 
 .credit-rating-section__score {
   position: absolute;
-  top: 52px;
-  right: 32px;
+  top: 48px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 1.25rem;
-  color: #DB1414;
+  color: #22c55e;
   line-height: 1.2;
+  transform: translateX(-50%);
 }
 
 .credit-rating-section__slider-container {
@@ -50,13 +50,15 @@
   left: 0;
   width: 458px;
   height: 4px;
-  background: linear-gradient(
-    to right,
-    #DB1414 0%,
-    #f59e0b 33%,
-    #22c55e 66%,
-    #0ea5e9 100%
-  );
+  background-color: rgba(8, 33, 49, 0.08);
+  border-radius: 2px;
+}
+
+.credit-rating-section__slider-progress {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 4px;
   border-radius: 2px;
 }
 
@@ -65,7 +67,7 @@
   top: 0;
   width: 10px;
   height: 10px;
-  background-color: #DB1414;
+  background-color: #22c55e;
   border: 2px solid #FFFFFF;
   border-radius: 5px;
   transform: translateX(-50%);
