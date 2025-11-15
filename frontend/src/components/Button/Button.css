@@ -68,13 +68,14 @@
 }
 
 .btn--primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+  background-color: var(--color-primary-400);
+  border-color: var(--color-primary-400);
+  box-shadow: 0 8px 20px rgba(24, 156, 244, 0.2);
 }
 
 .btn--primary:active:not(:disabled) {
-  background-color: var(--color-primary-active);
-  border-color: var(--color-primary-active);
+  background-color: var(--color-primary-300);
+  border-color: var(--color-primary-300);
 }
 
 /* Secondary Variant */

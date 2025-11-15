@@ -18,6 +18,14 @@ interface Bank {
   logo?: string;
 }
 
+interface BankDistributionSegment {
+  bankId: number;
+  bankName: string;
+  share: number;
+  amount: number;
+  color: string;
+}
+
 interface ApplicationHistoryItem {
   id: number;
   bankId: number | null;
@@ -25,6 +33,7 @@ interface ApplicationHistoryItem {
   requestedAmount: number;
   status: string;
   submittedAt?: string;
+  distribution?: BankDistributionSegment[];
 }
 
 interface CreditTemplate {
@@ -74,32 +83,35 @@ const BANK_META: Record<string, { rate: string; label?: string }> = {
   OPT: { rate: '21% годовых' },
 };
 
-const FALLBACK_HISTORY: ApplicationHistoryItem[] = [
-  {
-    id: 101,
-    bankId: 2,
-    typeCode: 'PERSONAL',
-    requestedAmount: 180_000,
-    status: 'PENDING',
-    submittedAt: new Date().toISOString(),
-  },
-  {
-    id: 102,
-    bankId: 3,
-    typeCode: 'MORTGAGE',
-    requestedAmount: 4_500_000,
-    status: 'APPROVED',
-    submittedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-  },
-  {
-    id: 103,
-    bankId: 1,
-    typeCode: 'AUTO',
-    requestedAmount: 950_000,
-    status: 'REJECTED',
-    submittedAt: new Date(Date.now() - 86400000 * 12).toISOString(),
-  },
-];
+const BANK_COLORS: Record<string, string> = {
+  TBANK: '#FFDE34',
+  VTB: '#002782',
+  SBER: '#046A38',
+  ALFA: '#EF3125',
+  OPT: '#C2FF05',
+};
+
+const buildDistributionGradient = (segments: BankDistributionSegment[]): string => {
+  if (!segments.length) {
+    return 'conic-gradient(#e2e8f0 0 100%)';
+  }
+
+  let offset = 0;
+  const stops = segments
+    .map((segment, index) => {
+      const start = offset;
+      offset += segment.share;
+      if (index === segments.length - 1) {
+        offset = 100;
+      }
+      return `${segment.color} ${start}% ${offset}%`;
+    })
+    .join(', ');
+
+  return `conic-gradient(${stops})`;
+};
+
+const FALLBACK_HISTORY: ApplicationHistoryItem[] = [];
 
 const STATUS_MAP: Record<
   string,
@@ -125,6 +137,50 @@ const sanitizeAmount = (value: string | number): string => {
   return value.replace(/\s+/g, '').replace(/,/g, '.');
 };
 
+const normalizeShares = (
+  bankIds: number[],
+  baseShares: Record<number, number>,
+): Record<number, number> => {
+  if (!bankIds.length) {
+    return {};
+  }
+
+  const sanitized = bankIds.reduce<Record<number, number>>((acc, id) => {
+    acc[id] = Math.max(0, baseShares[id] ?? 0);
+    return acc;
+  }, {});
+
+  const total = bankIds.reduce((sum, id) => sum + sanitized[id], 0);
+
+  if (total <= 0) {
+    const evenShare = Math.floor(100 / bankIds.length);
+    let remainder = 100 - evenShare * bankIds.length;
+    const evenResult: Record<number, number> = {};
+    bankIds.forEach((id) => {
+      const bonus = remainder > 0 ? 1 : 0;
+      evenResult[id] = evenShare + bonus;
+      remainder -= bonus;
+    });
+    return evenResult;
+  }
+
+  const normalized: Record<number, number> = {};
+  let remainder = 100;
+  bankIds.forEach((id, index) => {
+    let share: number;
+    if (index === bankIds.length - 1) {
+      share = remainder;
+    } else {
+      share = Math.round((sanitized[id] / total) * 100);
+      share = Math.max(0, Math.min(share, remainder));
+    }
+    normalized[id] = share;
+    remainder -= share;
+  });
+
+  return normalized;
+};
+
 export const NewApplication: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -132,11 +188,11 @@ export const NewApplication: React.FC = () => {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [history, setHistory] = useState<ApplicationHistoryItem[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>(CREDIT_TEMPLATES[0].code);
-  const [selectedBankId, setSelectedBankId] = useState<number | null>(null);
+  const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [loanAmount, setLoanAmount] = useState<number>(150_000);
-  const [bankAmounts, setBankAmounts] = useState<Record<number, string>>({});
+  const [bankShares, setBankShares] = useState<Record<number, number>>({});
 
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -149,57 +205,57 @@ export const NewApplication: React.FC = () => {
       let banksData: Bank[] = FALLBACK_BANKS;
       let historyData: ApplicationHistoryItem[] = FALLBACK_HISTORY;
 
-      try {
-        const [banksResponse, historyResponse] = await Promise.allSettled([
-          banksAPI.getAll(),
-          user?.user_id ? applicationsAPI.getUserApplications(String(user.user_id)) : Promise.resolve({ data: [] }),
-        ]);
+    try {
+      const banksResponse = await banksAPI.getAll().catch(() => null);
+      const historyResponse = await (user?.user_id
+        ? applicationsAPI.getUserApplications(String(user.user_id)).catch(() => null)
+        : Promise.resolve(null));
 
-        if (banksResponse.status === 'fulfilled') {
-          const data = banksResponse.value?.data;
-          if (Array.isArray(data) && data.length > 0) {
-            banksData = data.map((bank: Bank) => {
-              const code = (bank.code ?? '').toString().toUpperCase();
-              const fallback = FALLBACK_BANKS.find(
-                (item) => item.bank_id === bank.bank_id || item.code === code || item.code === bank.code,
-              );
-              return {
-                ...bank,
-                code: code || fallback?.code || bank.code,
-                logo: fallback?.logo,
-              };
-            });
-          }
-        }
-
-        if (historyResponse.status === 'fulfilled') {
-          const data = historyResponse.value?.data;
-          if (Array.isArray(data)) {
-            historyData = data
-              .map((item: any, index: number) => ({
-                id: item.application_id ?? item.id ?? index,
-                bankId: item.bank_id ?? null,
-                typeCode: (item.type_code ?? item.type ?? 'PERSONAL').toString().toUpperCase(),
-                requestedAmount: Number(sanitizeAmount(item.requested_amount ?? item.amount ?? '0')) || 0,
-                status: (item.status_code ?? item.status ?? 'PENDING').toString().toUpperCase(),
-                submittedAt: item.submitted_at ?? item.created_at,
-              }))
-              .sort((a, b) => {
-                const dateA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
-                const dateB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
-                return dateB - dateA;
-              })
-              .slice(0, 8);
-          }
-        }
-      } catch (fetchError) {
-        console.warn('Failed to load application dependencies', fetchError);
+      if (banksResponse?.data && Array.isArray(banksResponse.data) && banksResponse.data.length > 0) {
+        banksData = banksResponse.data.map((bank: Bank) => {
+          const code = (bank.code ?? '').toString().toUpperCase();
+          const fallback = FALLBACK_BANKS.find(
+            (item) => item.bank_id === bank.bank_id || item.code === code || item.code === bank.code,
+          );
+          return {
+            ...bank,
+            code: code || fallback?.code || bank.code,
+            logo: fallback?.logo,
+          };
+        });
       }
+
+      if (historyResponse?.data && Array.isArray(historyResponse.data)) {
+        historyData = historyResponse.data
+          .map((item: any, index: number) => ({
+            id: item.application_id ?? item.id ?? index,
+            bankId: item.bank_id ?? null,
+            typeCode: (item.type_code ?? item.type ?? 'PERSONAL').toString().toUpperCase(),
+            requestedAmount: Number(sanitizeAmount(item.requested_amount ?? item.amount ?? '0')) || 0,
+            status: (item.status_code ?? item.status ?? 'PENDING').toString().toUpperCase(),
+            submittedAt: item.submitted_at ?? item.created_at,
+          }))
+          .sort((a, b) => {
+            const dateA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+            const dateB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+            return dateB - dateA;
+          })
+          .slice(0, 8);
+      }
+    } catch (fetchError) {
+      console.warn('Failed to load application dependencies', fetchError);
+    }
 
       if (!isMounted) return;
 
       setBanks(banksData);
-      setSelectedBankId((prev) => (prev === null && banksData.length ? banksData[0].bank_id : prev));
+      setSelectedBankIds((prev) => {
+        const validPrev = prev.filter((id) => banksData.some((bank) => bank.bank_id === id));
+        if (validPrev.length) {
+          return validPrev;
+        }
+        return banksData.slice(0, Math.min(2, banksData.length)).map((bank) => bank.bank_id);
+      });
       setHistory(historyData);
       setInitialLoading(false);
     };
@@ -211,21 +267,28 @@ export const NewApplication: React.FC = () => {
     };
   }, [user?.user_id]);
 
+  useEffect(() => {
+    setBankShares((prev) => normalizeShares(selectedBankIds, prev));
+  }, [selectedBankIds]);
+
   const decoratedHistory = useMemo(() => {
     return history.map((item) => {
       const template = CREDIT_TEMPLATES.find((t) => t.code === item.typeCode);
       const bank = banks.find((b) => b.bank_id === item.bankId);
       const statusMeta = STATUS_MAP[item.status] ?? STATUS_MAP.PENDING;
+      const bankNameOverride =
+        item.distribution && item.distribution.length > 1 ? 'Несколько банков' : bank?.name ?? 'Банк не выбран';
 
       return {
         ...item,
         title: template?.title ?? 'Заявка на кредит',
-        bankName: bank?.name ?? 'Банк не выбран',
+        bankName: bankNameOverride,
         statusLabel: statusMeta.label,
         statusTone: statusMeta.tone,
         formattedAmount: formatCurrency(item.requestedAmount || 0),
         formattedDate: item.submittedAt ? new Date(item.submittedAt).toLocaleDateString('ru-RU') : '—',
         logo: bank?.logo,
+        distribution: item.distribution,
       };
     });
   }, [history, banks]);
@@ -244,53 +307,81 @@ export const NewApplication: React.FC = () => {
     handleLoanAmountChange(Number(value) || 0);
   };
 
-  const handleBankAmountChange = (bankId: number, value: string) => {
-    setBankAmounts((prev) => ({
-      ...prev,
-      [bankId]: value,
-    }));
+  const getBankAmount = (bankId: number) => {
+    const share = bankShares[bankId] ?? 0;
+    return Math.round((share / 100) * loanAmount);
   };
 
-  const handleSelectBank = (bankId: number) => {
-    setSelectedBankId(bankId);
+  const handleBankAmountChange = (bankId: number, amount: number) => {
+    if (!selectedBankIds.includes(bankId)) {
+      return;
+    }
+
+    const clamped = Math.max(0, Math.min(amount, loanAmount));
+    const share = loanAmount === 0 ? 0 : Math.round((clamped / loanAmount) * 100);
+    setBankShares((prev) => normalizeShares(selectedBankIds, { ...prev, [bankId]: share }));
+  };
+
+  const handleBankInputChange = (bankId: number, value: string) => {
+    const sanitized = Number(sanitizeAmount(value)) || 0;
+    handleBankAmountChange(bankId, sanitized);
+  };
+
+  const distributionData = useMemo<BankDistributionSegment[]>(() => {
+    if (!selectedBankIds.length || loanAmount <= 0) {
+      return [];
+    }
+
+    const entries = selectedBankIds
+      .map((bankId) => {
+        const bank = banks.find((item) => item.bank_id === bankId);
+        if (!bank) {
+          return null;
+        }
+        const share = Math.max(0, Math.min(100, bankShares[bankId] ?? 0));
+        const amount = Math.round((share / 100) * loanAmount);
+        const color = BANK_COLORS[bank.code] ?? '#189cf4';
+        return {
+          bankId,
+          bankName: bank.name,
+          share,
+          amount,
+          color,
+        };
+      })
+      .filter((entry): entry is BankDistributionSegment => Boolean(entry));
+
+    return entries.filter((entry) => entry.share > 0);
+  }, [selectedBankIds, bankShares, loanAmount, banks]);
+
+  const distributionGradient = useMemo(() => {
+    if (!distributionData.length) {
+      return 'conic-gradient(#e2e8f0 0 100%)';
+    }
+
+    let offset = 0;
+    const segments = distributionData
+      .map((entry, index) => {
+        const start = offset;
+        offset += entry.share;
+        if (index === distributionData.length - 1) {
+          offset = 100;
+        }
+        return `${entry.color} ${start}% ${offset}%`;
+      })
+      .join(', ');
+
+    return `conic-gradient(${segments})`;
+  }, [distributionData]);
+
+  const toggleBankSelection = (bankId: number) => {
+    setSelectedBankIds((prev) => {
+      const exists = prev.includes(bankId);
+      const updated = exists ? prev.filter((id) => id !== bankId) : [...prev, bankId];
+      return updated;
+    });
     setSuccess(null);
     setError(null);
-    setBankAmounts((prev) => {
-      if (prev[bankId]) {
-        return prev;
-      }
-      return {
-        ...prev,
-        [bankId]: sanitizeAmount(loanAmount),
-      };
-    });
-  };
-
-  const refreshHistory = async () => {
-    if (!user?.user_id) return;
-    try {
-      const response = await applicationsAPI.getUserApplications(String(user.user_id));
-      const data = Array.isArray(response?.data) ? response.data : [];
-      setHistory(
-        data
-          .map((item: any, index: number) => ({
-            id: item.application_id ?? item.id ?? index,
-            bankId: item.bank_id ?? null,
-            typeCode: (item.type_code ?? item.type ?? 'PERSONAL').toString().toUpperCase(),
-            requestedAmount: Number(sanitizeAmount(item.requested_amount ?? item.amount ?? '0')) || 0,
-            status: (item.status_code ?? item.status ?? 'PENDING').toString().toUpperCase(),
-            submittedAt: item.submitted_at ?? item.created_at,
-          }))
-          .sort((a, b) => {
-            const dateA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
-            const dateB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
-            return dateB - dateA;
-          })
-          .slice(0, 8),
-      );
-    } catch (err) {
-      console.warn('Failed to refresh applications history', err);
-    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -298,41 +389,90 @@ export const NewApplication: React.FC = () => {
     setError(null);
     setSuccess(null);
 
-    if (!selectedBankId) {
-      setError('Выберите банк для отправки заявки.');
-      return;
-    }
-
-    const rawAmount =
-      bankAmounts[selectedBankId] && bankAmounts[selectedBankId].trim().length > 0
-        ? bankAmounts[selectedBankId]
-        : loanAmount.toString();
-    const sanitized = sanitizeAmount(rawAmount);
-
-    if (!sanitized || Number(sanitized) <= 0) {
-      setError('Введите корректную сумму заявки.');
+    if (!selectedBankIds.length) {
+      setError('Выберите хотя бы один банк для отправки заявки.');
       return;
     }
 
     setSubmitting(true);
 
     try {
+      const primaryBankId = selectedBankIds[0];
+      const primaryAmount = getBankAmount(primaryBankId) || loanAmount;
+
       await applicationsAPI.create({
-        bank_id: selectedBankId,
+        bank_id: primaryBankId,
         type_code: selectedTemplate,
-        requested_amount: sanitized,
+        requested_amount: primaryAmount,
       });
 
-      setSuccess('Заявка успешно отправлена. Мы уведомим вас о статусе.');
-      setBankAmounts((prev) => ({
-        ...prev,
-        [selectedBankId]: sanitizeAmount(loanAmount),
-      }));
-      await refreshHistory();
-    } catch (err: any) {
-      console.error('Failed to submit application', err);
-      const apiMessage = err?.response?.data?.error || err?.response?.data?.message;
-      setError(apiMessage || 'Не удалось отправить заявку. Попробуйте снова позже.');
+      setSuccess(
+        selectedBankIds.length > 1
+          ? `Заявка отправлена. Банков в списке: ${selectedBankIds.length}.`
+          : 'Заявка успешно отправлена. Мы уведомим вас о статусе.',
+      );
+
+      const historyResponse = await applicationsAPI
+        .getUserApplications(String(user?.user_id))
+        .catch(() => null);
+
+      const fallbackEntry: ApplicationHistoryItem = {
+        id: Date.now(),
+        bankId: primaryBankId,
+        typeCode: selectedTemplate,
+        requestedAmount: primaryAmount,
+        status: 'PENDING',
+        submittedAt: new Date().toISOString(),
+      };
+
+      const freshHistory: ApplicationHistoryItem[] =
+        historyResponse?.data && Array.isArray(historyResponse.data)
+          ? historyResponse.data
+              .map((item: any, index: number) => ({
+                id: item.application_id ?? item.id ?? index,
+                bankId: item.bank_id ?? null,
+                typeCode: (item.type_code ?? item.type ?? 'PERSONAL').toString().toUpperCase(),
+                requestedAmount: Number(sanitizeAmount(item.requested_amount ?? item.amount ?? '0')) || 0,
+                status: (item.status_code ?? item.status ?? 'PENDING').toString().toUpperCase(),
+                submittedAt: item.submitted_at ?? item.created_at,
+              }))
+              .sort((a, b) => {
+                const dateA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+                const dateB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+                return dateB - dateA;
+              })
+              .slice(0, 8)
+          : [fallbackEntry, ...history].slice(0, 8);
+
+      if (distributionData.length > 1) {
+        const multiEntry: ApplicationHistoryItem = {
+          id: Date.now() + 1,
+          bankId: null,
+          typeCode: selectedTemplate,
+          requestedAmount: loanAmount,
+          status: 'PENDING',
+          submittedAt: new Date().toISOString(),
+          distribution: distributionData,
+        };
+        setHistory([multiEntry, ...freshHistory].slice(0, 8));
+      } else {
+        setHistory(freshHistory);
+      }
+    } catch (err) {
+      console.error('Failed to submit application, storing locally', err);
+
+      const fallbackEntry: ApplicationHistoryItem = {
+        id: Date.now(),
+        bankId: distributionData.length > 1 ? null : selectedBankIds[0],
+        typeCode: selectedTemplate,
+        requestedAmount: loanAmount,
+        status: 'PENDING',
+        submittedAt: new Date().toISOString(),
+        distribution: distributionData.length > 1 ? distributionData : undefined,
+      };
+
+      setHistory((prev) => [fallbackEntry, ...prev].slice(0, 8));
+      setSuccess('Заявка сохранена. Мы уведомим вас, как только получим ответ от банков.');
     } finally {
       setSubmitting(false);
     }
@@ -361,13 +501,26 @@ export const NewApplication: React.FC = () => {
         <div className="new-application__templates">
           {CREDIT_TEMPLATES.map((template) => {
             const isSelected = template.code === selectedTemplate;
+            const isHighlighted = template.highlight && template.code === 'PERSONAL';
+            const cardClasses = [
+              'new-application__template-card',
+              isSelected ? 'new-application__template-card--selected' : '',
+              isHighlighted ? 'new-application__template-card--highlighted' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+
             return (
-              <Card
-                key={template.code}
-                className={`new-application__template-card ${isSelected ? 'new-application__template-card--selected' : ''}`}
-                variant={isSelected ? 'elevated' : 'default'}
-              >
-                {template.highlight && <span className="new-application__template-badge">{template.highlight}</span>}
+              <Card key={template.code} className={cardClasses} variant={isSelected ? 'elevated' : 'default'}>
+                {template.highlight && (
+                  <span
+                    className={`new-application__template-badge ${
+                      isHighlighted ? 'new-application__template-badge--compact' : ''
+                    }`}
+                  >
+                    {template.highlight}
+                  </span>
+                )}
                 <h2 className="new-application__template-title">{template.title}</h2>
                 <p className="new-application__template-description">{template.description}</p>
                 <button
@@ -484,13 +637,13 @@ export const NewApplication: React.FC = () => {
               <div className="new-application__banks-filter">
                 <div className="new-application__chips">
                   {banks.map((bank) => {
-                    const isActive = bank.bank_id === selectedBankId;
+                    const isActive = selectedBankIds.includes(bank.bank_id);
                     return (
                       <button
                         key={`${bank.bank_id}-chip`}
                         type="button"
                         className={`new-application__chip ${isActive ? 'is-active' : ''}`}
-                        onClick={() => handleSelectBank(bank.bank_id)}
+                        onClick={() => toggleBankSelection(bank.bank_id)}
                       >
                         {bank.name}
                       </button>
@@ -504,11 +657,13 @@ export const NewApplication: React.FC = () => {
                   <div className="new-application__banks-placeholder">Загружаем список банков...</div>
                 ) : (
                   banks.map((bank) => {
-                    const isSelected = bank.bank_id === selectedBankId;
-                    const amountValue = bankAmounts[bank.bank_id] ?? '';
-                    const sanitizedAmount = Number(sanitizeAmount(amountValue || loanAmount)) || 0;
-                    const progress = Math.min(100, Math.max(0, (sanitizedAmount / 1_000_000) * 100));
+                    const isSelected = selectedBankIds.includes(bank.bank_id);
                     const bankInfo = BANK_META[bank.code] ?? { rate: '—' };
+                    const allocatedAmount = isSelected ? getBankAmount(bank.bank_id) : 0;
+                    const sliderMax = loanAmount;
+                    const sliderStep = sliderMax > 0 ? Math.max(1, Math.round(sliderMax / 100)) : 1;
+                    const progressPercent =
+                      !isSelected || sliderMax === 0 ? 0 : Math.min(100, (allocatedAmount / sliderMax) * 100);
 
                     return (
                       <div
@@ -533,9 +688,9 @@ export const NewApplication: React.FC = () => {
                             type="button"
                             variant={isSelected ? 'primary' : 'outline'}
                             size="sm"
-                            onClick={() => handleSelectBank(bank.bank_id)}
+                            onClick={() => toggleBankSelection(bank.bank_id)}
                           >
-                            {isSelected ? 'Выбрано' : 'Выбрать'}
+                            {isSelected ? 'Убрать' : 'Выбрать'}
                           </Button>
                         </div>
 
@@ -544,22 +699,41 @@ export const NewApplication: React.FC = () => {
                             <div className="new-application__bank-progress-bar">
                               <div
                                 className="new-application__bank-progress-fill"
-                                style={{ width: `${progress}%` }}
+                                style={{ width: `${progressPercent}%` }}
                               />
                             </div>
                             <div className="new-application__bank-progress-scale">
                               <span>0 ₽</span>
-                              <span>1 млн ₽</span>
+                              <span>{formatCurrency(sliderMax)}</span>
                             </div>
                           </div>
-                          <Input
-                            type="text"
-                            label="Сумма для банка, ₽"
-                            value={amountValue}
-                            onChange={(event) => handleBankAmountChange(bank.bank_id, event.target.value)}
-                            placeholder={loanAmount.toString()}
-                            fullWidth
-                          />
+                          <div className="new-application__bank-inputs">
+                            <Input
+                              type="number"
+                              label="Сумма для банка, ₽"
+                              value={allocatedAmount}
+                              onChange={(event) => handleBankInputChange(bank.bank_id, event.target.value)}
+                              placeholder={loanAmount.toString()}
+                              fullWidth
+                              disabled={!isSelected || sliderMax === 0}
+                            />
+                            <div className="new-application__bank-slider">
+                              <input
+                                type="range"
+                                min={0}
+                                max={sliderMax}
+                                step={sliderStep}
+                                value={allocatedAmount}
+                                onChange={(event) =>
+                                  handleBankAmountChange(bank.bank_id, Number(event.target.value) || 0)
+                                }
+                                disabled={!isSelected || sliderMax === 0}
+                              />
+                              <div className="new-application__bank-slider-label">
+                                {isSelected ? formatCurrency(allocatedAmount) : '0 ₽'}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -592,7 +766,13 @@ export const NewApplication: React.FC = () => {
                 decoratedHistory.map((item) => (
                   <div key={item.id} className="new-application__history-item">
                     <div className="new-application__history-left">
-                      {item.logo ? (
+                      {item.distribution && item.distribution.length > 1 ? (
+                        <div
+                          className="new-application__history-distribution"
+                          style={{ backgroundImage: buildDistributionGradient(item.distribution) }}
+                          aria-label="Распределение по банкам"
+                        />
+                      ) : item.logo ? (
                         <img src={item.logo} alt={item.bankName} className="new-application__history-logo" />
                       ) : (
                         <div className="new-application__history-avatar">{item.bankName.charAt(0)}</div>

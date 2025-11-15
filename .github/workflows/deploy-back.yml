@@ -32,6 +32,7 @@ jobs:
       - name: Create .env file
         run: |
           echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > backend/.env.prod
+          echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > backend/.env.prod
 
       # Сборка Docker-образа
       - name: Build Docker image

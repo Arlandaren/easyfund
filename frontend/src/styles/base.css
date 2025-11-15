@@ -207,6 +207,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
 body {
   font-family: var(--font-primary);
   font-size: var(--font-size-base);
@@ -214,6 +215,14 @@ body {
   line-height: 1.5;
   color: var(--color-text-primary);
   background-color: var(--color-background);
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 h1, h2, h3, h4, h5, h6 {

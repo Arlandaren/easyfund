@@ -24,62 +24,58 @@
   font-weight: 400;
   font-size: 0.75rem;
   color: #C2C2C2;
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
   line-height: 1.5;
 }
 
+.progress-section__progress-info {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.progress-section__progress-percentage {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #22c55e;
+}
+
 .progress-section__progress-container {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 268px;
-  margin-bottom: 8px;
+  margin: 0 auto;
 }
 
 .progress-section__progress-bar-bg {
   width: 100%;
-  height: 10px;
-  background-color: #E5E5E5;
-  border-radius: 5px;
+  height: 12px;
+  background-color: rgba(24, 156, 244, 0.08);
+  border-radius: 999px;
   position: relative;
   overflow: hidden;
 }
 
 .progress-section__progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #189CF4 0%, #38bdf8 100%);
-  border-radius: 5px;
+  background: linear-gradient(90deg, #52dd6d 0%, #8ef069 100%);
+  border-radius: 999px;
   transition: width 0.3s ease;
 }
 
 .progress-section__progress-labels {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  margin-top: 11px;
-  position: relative;
-}
-
-.progress-section__progress-label {
   font-family: 'Inter', sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 0.75rem;
-  color: #C2C2C2;
-  white-space: nowrap;
-}
-
-.progress-section__progress-percentage {
-  position: absolute;
-  top: 25px;
-  left: 113px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 400;
-  font-size: 0.75rem;
-  color: #DB1414;
-  white-space: nowrap;
+  color: #9ca3af;
 }
 
 .progress-section__encouragement {
-  margin-top: 22px;
+  margin-top: 16px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 0.875rem;
