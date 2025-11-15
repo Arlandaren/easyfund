@@ -66,6 +66,9 @@ export const ApplicationsList: React.FC = () => {
     { value: 'completed', label: 'Завершено' },
   ];
 
+  const normalizeStatus = (value: unknown, fallback: string): string =>
+    (value ?? fallback).toString().toLowerCase();
+
   const fetchApplications = async () => {
     if (!user?.user_id) return;
 
@@ -89,7 +92,7 @@ export const ApplicationsList: React.FC = () => {
         amount: loan.original_amount || loan.amount || '0',
         interest_rate: loan.interest_rate || loan.rate || '0',
         months: loan.months || 0,
-        status: loan.status || 'active',
+        status: normalizeStatus(loan.status, 'active'),
         purpose: loan.purpose || 'Кредит',
         created_at: loan.taken_at || loan.created_at,
       }));
@@ -100,7 +103,7 @@ export const ApplicationsList: React.FC = () => {
         name: `Приложение #${app.application_id ?? app.id ?? 0}`,
         amount: app.requested_amount || app.amount || '0',
         interest_rate: '0',
-        status: app.status || app.status_code || 'pending',
+        status: normalizeStatus(app.status || app.status_code, 'pending'),
         purpose: app.purpose || 'Заявка на кредит',
         term_months: app.term_months,
         bank_id: app.bank_id,
@@ -131,26 +134,47 @@ export const ApplicationsList: React.FC = () => {
     }
 
     if (filterStatus && filterStatus !== 'all') {
-      filtered = filtered.filter((app) => app.status === filterStatus);
+      filtered = filtered.filter(
+        (app) => (app.status ?? '').toLowerCase() === filterStatus,
+      );
     }
 
     setFilteredApplications(filtered);
   };
 
   const getStatusBadge = (status?: string) => {
-    if (!status) return { label: 'Неизвестно', color: '#9ca3af' };
+    if (!status) {
+      return {
+        label: 'Неизвестно',
+        background: '#e2e8f0',
+        color: '#475569',
+      };
+    }
 
-    const statusMap: Record<string, { label: string; color: string }> = {
-      active: { label: 'Активный', color: '#10b981' },
-      pending: { label: 'На рассмотрении', color: '#f59e0b' },
-      approved: { label: 'Одобрено', color: '#3b82f6' },
-      rejected: { label: 'Отклонено', color: '#ef4444' },
-      completed: { label: 'Завершено', color: '#6366f1' },
-      under_review: { label: 'На проверке', color: '#f59e0b' },
-      partially_approved: { label: 'Частично одобрено', color: '#8b5cf6' },
+    const statusMap: Record<
+      string,
+      { label: string; background: string; color: string }
+    > = {
+      active: { label: 'Активный', background: '#E2FFC6', color: '#2E6F1C' },
+      pending: { label: 'На рассмотрении', background: '#FFF7C6', color: '#7A4E03' },
+      approved: { label: 'Одобрено', background: '#dbeafe', color: '#1d4ed8' },
+      rejected: { label: 'Отклонено', background: '#fee2e2', color: '#b91c1c' },
+      completed: { label: 'Завершено', background: '#ede9fe', color: '#5b21b6' },
+      under_review: { label: 'На проверке', background: '#fef3c7', color: '#92400e' },
+      partially_approved: {
+        label: 'Частично одобрено',
+        background: '#f3e8ff',
+        color: '#6b21a8',
+      },
     };
 
-    return statusMap[status] || { label: status.toUpperCase(), color: '#9ca3af' };
+    return (
+      statusMap[status] || {
+        label: status.toUpperCase(),
+        background: '#e2e8f0',
+        color: '#475569',
+      }
+    );
   };
 
   const formatDate = (dateStr?: string) => {
@@ -272,7 +296,10 @@ export const ApplicationsList: React.FC = () => {
                     <h3 className="applications-card-title">{app.name}</h3>
                     <span
                       className="applications-badge"
-                      style={{ backgroundColor: statusBadge.color }}
+                      style={{
+                        backgroundColor: statusBadge.background,
+                        color: statusBadge.color,
+                      }}
                     >
                       {statusBadge.label}
                     </span>

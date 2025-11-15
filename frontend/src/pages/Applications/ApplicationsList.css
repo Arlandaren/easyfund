@@ -59,7 +59,7 @@
 }
 
 .applications-btn-new:hover {
-  background-color: #1281d4;
+  background-color: #38bdf8;
 }
 
 .applications-filters {
@@ -216,7 +216,7 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
-  color: white;
+  color: inherit;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -272,7 +272,7 @@
 }
 
 .applications-card-btn:hover {
-  background-color: #1281d4;
+  background-color: #38bdf8;
 }
 
 @media (max-width: 768px) {
